@@ -66,7 +66,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	msg := buidlCommentMsg(strings.Split(string(outputs), "\n"))
+	msg := buildCommentMsg(strings.Split(string(outputs), "\n"))
 
 	err = createCoverageComment(*currentPullRequest.Number, msg)
 	if err != nil {
@@ -132,7 +132,7 @@ func getCurrentPullRequest() (*github.PullRequest, error) {
 	return nil, errors.New("current pull request not found")
 }
 
-func buidlCommentMsg(outputs []string) string {
+func buildCommentMsg(outputs []string) string {
 	msg := `
 |file|row|func|coverage|
 |--|--|--|--|

@@ -24,11 +24,12 @@ type Env struct {
 func init() {
 	fmt.Println("env initializing...")
 	_, b, _, _ := runtime.Caller(0)
-	projectRootPath := filepath.Dir(b) + "/../../"
-	_ = godotenv.Load(projectRootPath + ".env")
 	appEnv := os.Getenv("APP_ENV")
-	_ = godotenv.Load(projectRootPath + ".env." + appEnv + ".local")
-	_ = godotenv.Load(projectRootPath + ".env." + appEnv + "")
+	projectRootPath := filepath.Dir(b) + "/../../"
+	envPath := projectRootPath + ".env"
+	appEnvPath := envPath + "." + appEnv
+	localEnvPath := appEnvPath + ".local"
+	_ = godotenv.Load(envPath, appEnvPath, localEnvPath)
 	Envs = &Env{}
 	err := env.Parse(Envs)
 	if err != nil {
