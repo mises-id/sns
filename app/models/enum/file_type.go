@@ -14,11 +14,14 @@ var (
 		ImageFile: "image",
 		VideoFile: "video",
 	}
-	fileTypeStringMap = map[string]FileType{
-		"image": ImageFile,
-		"video": VideoFile,
-	}
+	fileTypeStringMap = map[string]FileType{}
 )
+
+func init() {
+	for key, val := range fileTypeMap {
+		fileTypeStringMap[val] = key;
+	}
+}
 
 func (tp FileType) String() string {
 	return fileTypeMap[tp]
