@@ -24,7 +24,7 @@ func init() {
 }
 
 func UploadFile(ctx context.Context, filePath, filename string, file File) error {
-	realPath := path.Join(env.Envs.RootPath+Prefix, filePath)
+	realPath := path.Join(env.Envs.RootPath, Prefix, filePath)
 	return storageService.Upload(ctx, realPath, filename, file)
 }
 

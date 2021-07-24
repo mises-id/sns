@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"path"
 	"strconv"
 	"time"
 
@@ -29,18 +30,19 @@ func (a *Attachment) BeforeCreate(ctx context.Context) error {
 }
 
 func (a *Attachment) FileUrl() string {
-	return env.Envs.AssetHost + storage.Prefix + a.filePath() + a.Filename
+	return env.Envs.AssetHost + path.Join(storage.Prefix, a.fileFolder(), a.Filename)
 }
 
-func (a *Attachment) filePath() string {
+func (a *Attachment) fileFolder() string {
 	if a.ID == 0 {
 		return "tmp"
 	}
-	return "attachment/" + a.CreatedAt.Format("2006/01/02/") + strconv.Itoa(int(a.ID)) + "/"
+	const attachmentPrefix = "attachment/"
+	return path.Join(attachmentPrefix, a.CreatedAt.Format("2006/01/02/"), strconv.Itoa(int(a.ID)))
 }
 
 func (a *Attachment) UploadFile(ctx context.Context) error {
-	return storage.UploadFile(ctx, a.filePath(), a.Filename, a.file)
+	return storage.UploadFile(ctx, a.fileFolder(), a.Filename, a.file)
 }
 
 func CreateAttachment(ctx context.Context, tp enum.FileType, filename string, file storage.File) (*Attachment, error) {
