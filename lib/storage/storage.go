@@ -8,7 +8,7 @@ import (
 
 var (
 	storageService IStorageService
-	prefix         = env.Envs.RootPath + "upload/"
+	Prefix         = "upload/"
 )
 
 func init() {
@@ -23,7 +23,7 @@ func init() {
 }
 
 func UploadFile(ctx context.Context, path, filename string, file File) error {
-	return storageService.Upload(ctx, prefix+path, filename, file)
+	return storageService.Upload(ctx, env.Envs.RootPath+Prefix+path, filename, file)
 }
 
 type IStorageService interface {

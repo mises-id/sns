@@ -7,9 +7,10 @@ import (
 )
 
 type AttachmentResp struct {
-	ID       uint64
-	Filename string
-	FileType string
+	ID       uint64 `json:"id"`
+	Filename string `json:"filename"`
+	FileType string `json:"file_type"`
+	Url      string `json:"url"`
 }
 
 func Upload(c echo.Context) error {
@@ -31,5 +32,6 @@ func Upload(c echo.Context) error {
 		ID:       attachment.ID,
 		Filename: attachment.Filename,
 		FileType: attachment.FileType.String(),
+		Url:      attachment.FileUrl(),
 	})
 }

@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/mises-id/sns/config/env"
 	"github.com/mises-id/sns/lib/db"
 	"github.com/mises-id/sns/lib/storage"
 )
@@ -42,6 +43,10 @@ func (a *Attachment) BeforeCreate(ctx context.Context) error {
 	a.CreatedAt = time.Now()
 	a.UpdatedAt = time.Now()
 	return err
+}
+
+func (a *Attachment) FileUrl() string {
+	return env.Envs.AssetHost + storage.Prefix + a.filePath() + a.Filename
 }
 
 func (a *Attachment) filePath() string {

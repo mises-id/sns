@@ -2,24 +2,35 @@ package tests
 
 import (
 	"context"
+	"sort"
 
+	"github.com/khaiql/dbcleaner"
 	"github.com/mises-id/sns/lib/db"
 	"github.com/stretchr/testify/suite"
 )
 
 type BaseTestSuite struct {
 	suite.Suite
+	dbcleaner.DbCleaner
 }
 
-func (s *BaseTestSuite) SetupSuite() {
+func (suite *BaseTestSuite) SetupSuite() {
+	suite.DbCleaner = dbcleaner.New()
 	db.SetupMongo(context.Background())
 }
 
-func (s *BaseTestSuite) TearDownSuite() {
+func (suite *BaseTestSuite) TearDownSuite() {
 }
 
-func (s *BaseTestSuite) Clean(tables ...string) {
+func (suite *BaseTestSuite) Clean(collections ...string) {
+	sort.Strings(collections)
+	suite.DbCleaner.Acquire(collections...)
+	for _, collection := range collections {
+		_ = db.DB().Collection(collection).Drop(context.Background())
+	}
 }
 
-func (s *BaseTestSuite) Acquire(tables ...string) {
+func (suite *BaseTestSuite) Acquire(collections ...string) {
+	sort.Strings(collections)
+	suite.DbCleaner.Acquire(collections...)
 }
