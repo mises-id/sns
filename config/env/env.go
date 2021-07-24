@@ -19,6 +19,8 @@ type Env struct {
 	MongoURI          string `env:"MONGO_URI,required"`
 	DBName            string `env:"DB_NAME" envDefault:"mises"`
 	AssetLogoBasePath string `env:"ASSET_LOGO_BASE_PATH" envDefault:"http://localhost/assets"`
+	StorageProvider   string `env:"STORAGE_PROVIDER" envDefault:"local"`
+	RootPath          string
 }
 
 func init() {
@@ -29,11 +31,22 @@ func init() {
 	envPath := projectRootPath + ".env"
 	appEnvPath := envPath + "." + appEnv
 	localEnvPath := appEnvPath + ".local"
-	_ = godotenv.Load(envPath, appEnvPath, localEnvPath)
+	_ = godotenv.Load(filtePath(localEnvPath, appEnvPath, envPath)...)
 	Envs = &Env{}
 	err := env.Parse(Envs)
 	if err != nil {
 		panic(err)
 	}
+	Envs.RootPath = projectRootPath
 	fmt.Println("env loaded...")
+}
+
+func filtePath(paths ...string) []string {
+	result := make([]string, 0)
+	for _, path := range paths {
+		if _, err := os.Stat(path); err == nil {
+			result = append(result, path)
+		}
+	}
+	return result
 }

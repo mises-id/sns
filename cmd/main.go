@@ -14,15 +14,14 @@ import (
 	"github.com/mises-id/sns/config/env"
 	"github.com/mises-id/sns/config/route"
 	"github.com/mises-id/sns/lib/db"
+	_ "github.com/mises-id/sns/lib/mises"
 )
 
 func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
 	defer cancel()
-	db.SetupMongo(ctx, env.Envs.MongoURI, env.Envs.DBName)
-
+	db.SetupMongo(ctx)
 	e := echo.New()
-
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Skipper: func(c echo.Context) bool { return c.Path() == "/" },
 		Format: `{"timestamp":"${time_rfc3339}","serviceContext":{"service":"mises-sns"},"message":"${remote_ip} ${status} ${method} ${uri}",` +
