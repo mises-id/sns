@@ -1,4 +1,4 @@
 package mises
 
-type MisesClient interface {
+type Client interface {
 }

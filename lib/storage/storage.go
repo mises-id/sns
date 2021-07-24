@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"path"
 
 	"github.com/mises-id/sns/config/env"
 )
@@ -22,8 +23,9 @@ func init() {
 	}
 }
 
-func UploadFile(ctx context.Context, path, filename string, file File) error {
-	return storageService.Upload(ctx, env.Envs.RootPath+Prefix+path, filename, file)
+func UploadFile(ctx context.Context, filePath, filename string, file File) error {
+	realPath := path.Join(env.Envs.RootPath+Prefix, filePath)
+	return storageService.Upload(ctx, realPath, filename, file)
 }
 
 type IStorageService interface {

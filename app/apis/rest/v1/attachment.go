@@ -4,7 +4,12 @@ import (
 	"github.com/labstack/echo"
 	"github.com/mises-id/sns/app/apis/rest"
 	svc "github.com/mises-id/sns/app/services/attachment"
+	"github.com/mises-id/sns/lib/codes"
 )
+
+type UploadParams struct {
+	FileType string `form:"file_type"`
+}
 
 type AttachmentResp struct {
 	ID       uint64 `json:"id"`
@@ -14,17 +19,20 @@ type AttachmentResp struct {
 }
 
 func Upload(c echo.Context) error {
-	fileType := c.FormValue("file_type")
+	params := &UploadParams{}
+	if err := c.Bind(params); err != nil {
+		return codes.ErrInvalidArgument.New("invalid upload params")
+	}
 	file, err := c.FormFile("file")
 	if err != nil {
-		return err
+		return codes.ErrInvalidArgument.New("receive file failed")
 	}
 	src, err := file.Open()
 	if err != nil {
 		return err
 	}
 	defer src.Close()
-	attachment, err := svc.CreateAttachment(c.Request().Context(), fileType, file.Filename, src)
+	attachment, err := svc.CreateAttachment(c.Request().Context(), params.FileType, file.Filename, src)
 	if err != nil {
 		return err
 	}

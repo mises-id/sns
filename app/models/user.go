@@ -10,8 +10,9 @@ import (
 type Gender uint8
 
 const (
-	Male Gender = iota
-	Female
+	GenderOther = iota
+	GenderMale
+	GenderFemale
 )
 
 type User struct {
