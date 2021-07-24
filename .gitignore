@@ -1,3 +1,5 @@
 .env.*.local
 main
 .DS_Store
+upload/*/*
+.idea
