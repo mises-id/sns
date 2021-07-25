@@ -20,6 +20,7 @@ type Env struct {
 	DBName          string `env:"DB_NAME" envDefault:"mises"`
 	AssetHost       string `env:"ASSET_HOST" envDefault:"http://localhost/"`
 	StorageProvider string `env:"STORAGE_PROVIDER" envDefault:"local"`
+	JWTSecret       string `env:"JWT_SECRET,required"`
 	RootPath        string
 }
 

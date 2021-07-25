@@ -12,8 +12,9 @@ const (
 
 var (
 	genderMap = map[Gender]string{
-		GenderOther: "other",
-		GenderMale:  "male",
+		GenderOther:  "other",
+		GenderMale:   "male",
+		GenderFemale: "female",
 	}
 	genderStringMap = map[string]Gender{}
 )

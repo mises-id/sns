@@ -25,9 +25,12 @@ type Attachment struct {
 func (a *Attachment) BeforeCreate(ctx context.Context) error {
 	var err error
 	a.ID, err = getNextSeq(ctx, "attachmentid")
+	if err != nil {
+		return err
+	}
 	a.CreatedAt = time.Now()
 	a.UpdatedAt = time.Now()
-	return err
+	return nil
 }
 
 func (a *Attachment) FileUrl() string {

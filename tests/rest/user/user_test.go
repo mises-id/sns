@@ -33,7 +33,7 @@ func (suite *UserServerSuite) SetupTest() {
 }
 
 func (suite *UserServerSuite) TearDownTest() {
-	// suite.Clean(suite.collections...)
+	suite.Clean(suite.collections...)
 }
 
 func TestUserServer(t *testing.T) {
@@ -51,8 +51,7 @@ func (suite *UserServerSuite) TestFindUser() {
 	factories.InitUsers(&models.User{
 		UID:      1,
 		AvatarID: 1,
-	})
-	factories.InitUsers(&models.User{
+	}, &models.User{
 		UID:      2,
 		AvatarID: 0,
 	})
@@ -77,5 +76,79 @@ func (suite *UserServerSuite) TestFindUser() {
 		resp.Value("code").Equal(0)
 		resp.Value("data").Object().Value("uid").Equal(2)
 		resp.Value("data").Object().Value("avatar").Null()
+	})
+}
+
+func (suite *UserServerSuite) TestSignin() {
+	factories.InitUsers(&models.User{
+		UID:      1001,
+		AvatarID: 0,
+		Misesid:  "123",
+	})
+	factories.InitAttachments(&models.Attachment{
+		ID:        1,
+		Filename:  "test.jpg",
+		FileType:  enum.ImageFile,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	})
+	suite.T().Run("user signin success", func(t *testing.T) {
+		resp := suite.Expect.POST("/api/v1/signin").WithJSON(map[string]interface{}{
+			"provider": "mises",
+			"user_authz": map[string]interface{}{
+				"misesid":   "123",
+				"auth_code": "123",
+			},
+		}).Expect().Status(http.StatusOK).JSON().Object()
+		resp.Value("code").Equal(0)
+	})
+	suite.T().Run("create new success", func(t *testing.T) {
+		resp := suite.Expect.POST("/api/v1/signin").WithJSON(map[string]interface{}{
+			"provider": "mises",
+			"user_authz": map[string]interface{}{
+				"misesid":   "234",
+				"auth_code": "234",
+			},
+		}).Expect().Status(http.StatusOK).JSON().Object()
+		resp.Value("code").Equal(0)
+	})
+}
+
+func (suite *UserServerSuite) TestUpdateUser() {
+	factories.InitUsers(&models.User{
+		UID:      1001,
+		AvatarID: 0,
+		Misesid:  "123",
+	})
+	token := suite.LoginUser("123")
+	suite.T().Run("update username success", func(t *testing.T) {
+		resp := suite.Expect.PATCH("/api/v1/user/me").WithJSON(map[string]interface{}{
+			"by": "username",
+			"username": map[string]interface{}{
+				"username": "Hahaha",
+			},
+		}).WithHeader("Authorization", "Bearer "+token).Expect().Status(http.StatusOK).JSON().Object()
+		resp.Value("code").Equal(0)
+	})
+	suite.T().Run("update user avatar success", func(t *testing.T) {
+		resp := suite.Expect.PATCH("/api/v1/user/me").WithJSON(map[string]interface{}{
+			"by": "avatar",
+			"avatar": map[string]interface{}{
+				"attachment_id": 1,
+			},
+		}).WithHeader("Authorization", "Bearer "+token).Expect().Status(http.StatusOK).JSON().Object()
+		resp.Value("code").Equal(0)
+	})
+	suite.T().Run("update user profile success", func(t *testing.T) {
+		resp := suite.Expect.PATCH("/api/v1/user/me").WithJSON(map[string]interface{}{
+			"by": "profile",
+			"profile": map[string]interface{}{
+				"email":   "test@t.com",
+				"gender":  "female",
+				"mobile":  "123456",
+				"address": "xxxx",
+			},
+		}).WithHeader("Authorization", "Bearer "+token).Expect().Status(http.StatusOK).JSON().Object()
+		resp.Value("code").Equal(0)
 	})
 }
