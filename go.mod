@@ -5,6 +5,7 @@ go 1.16
 require (
 	github.com/ajg/form v1.5.1 // indirect
 	github.com/alexflint/go-filemutex v1.1.0 // indirect
+	github.com/bluele/factory-go v0.0.1
 	github.com/caarlos0/env v3.5.0+incompatible
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/fasthttp-contrib/websocket v0.0.0-20160511215533-1f3b11f56072 // indirect

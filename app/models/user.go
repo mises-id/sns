@@ -3,26 +3,21 @@ package models
 import (
 	"context"
 
+	"github.com/mises-id/sns/app/models/enum"
 	"github.com/mises-id/sns/lib/db"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-type Gender uint8
-
-const (
-	GenderOther = iota
-	GenderMale
-	GenderFemale
-)
-
 type User struct {
-	UID      uint64 `bson:"_id"`
-	Username string `bson:"username,omitempty"`
-	Misesid  string `bson:"misesid,omitempty"`
-	Gender   Gender `bson:"gender,misesid"`
-	Mobile   string `bson:"mobile,omitempty"`
-	Email    string `bson:"email,omitempty"`
-	Address  string `bson:"address,omitempty"`
+	UID      uint64      `bson:"_id"`
+	Username string      `bson:"username,omitempty"`
+	Misesid  string      `bson:"misesid,omitempty"`
+	Gender   enum.Gender `bson:"gender,misesid"`
+	Mobile   string      `bson:"mobile,omitempty"`
+	Email    string      `bson:"email,omitempty"`
+	Address  string      `bson:"address,omitempty"`
+	AvatarID uint64      `bson:"avatar_id,omitempty"`
+	Avatar   *Attachment
 }
 
 func (u *User) BeforeCreate(ctx context.Context) error {

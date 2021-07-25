@@ -39,6 +39,8 @@ github.com/alexflint/go-filemutex v1.1.0 h1:IAWuUuRYL2hETx5b8vCgwnD+xSdlsTQY6s2J
 github.com/alexflint/go-filemutex v1.1.0/go.mod h1:7P4iRhttt/nUvUOrYIhcpMzv2G6CY9UnI16Z+UJqRyk=
 github.com/andybalholm/brotli v1.0.2 h1:JKnhI/XQ75uFBTiuzXpzFrUriDPiZjlOSzh6wXogP0E=
 github.com/andybalholm/brotli v1.0.2/go.mod h1:loMXtMfwqflxFJPmdbJO0a3KNoPuLBgiu3qAvBg8x/Y=
+github.com/bluele/factory-go v0.0.1 h1:Wb3nA5Oe9biPfBJNNtZ9rcsf38jNwJV/2ASShHao8Ug=
+github.com/bluele/factory-go v0.0.1/go.mod h1:M5D/YMEfPK1tzRvy/nj1tb0nfvvNY3d9zmgT66sldu0=
 github.com/caarlos0/env v3.5.0+incompatible h1:Yy0UN8o9Wtr/jGHZDpCBLpNrzcFLLM2yixi/rBrKyJs=
 github.com/caarlos0/env v3.5.0+incompatible/go.mod h1:tdCsowwCzMLdkqRYDlHpZCp2UooDD3MspDBjZ2AD02Y=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=

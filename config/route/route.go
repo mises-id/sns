@@ -14,4 +14,5 @@ func SetRoutes(e *echo.Echo) {
 
 	groupV1 := e.Group("/api/v1", mw.ErrorResponseMiddleware)
 	groupV1.POST("/attachment", v1.Upload)
+	groupV1.GET("/user/:uid", v1.FindUser)
 }

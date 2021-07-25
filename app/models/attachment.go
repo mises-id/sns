@@ -10,6 +10,7 @@ import (
 	"github.com/mises-id/sns/config/env"
 	"github.com/mises-id/sns/lib/db"
 	"github.com/mises-id/sns/lib/storage"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 type Attachment struct {
@@ -59,4 +60,23 @@ func CreateAttachment(ctx context.Context, tp enum.FileType, filename string, fi
 	}
 	_, err := db.DB().Collection("attachments").InsertOne(ctx, attachment)
 	return attachment, err
+}
+
+func FindAttachmentMap(ctx context.Context, ids []uint64) (map[uint64]*Attachment, error) {
+	attachments := make([]*Attachment, 0)
+	cursor, err := db.DB().Collection("attachments").Find(ctx,
+		bson.M{
+			"_id": bson.M{"$in": ids},
+		})
+	if err != nil {
+		return nil, err
+	}
+	if err = cursor.All(ctx, &attachments); err != nil {
+		return nil, err
+	}
+	result := make(map[uint64]*Attachment)
+	for _, attachment := range attachments {
+		result[attachment.ID] = attachment
+	}
+	return result, nil
 }
