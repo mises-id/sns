@@ -40,3 +40,14 @@ func (s *RestBaseTestSuite) InitExpect() {
 		Reporter: httpexpect.NewRequireReporter(s.T()),
 	})
 }
+
+func (suite *RestBaseTestSuite) LoginUser(misesid string) string {
+	resp := suite.Expect.POST("/api/v1/signin").WithJSON(map[string]interface{}{
+		"provider": "mises",
+		"user_authz": map[string]interface{}{
+			"misesid":   misesid,
+			"auth_code": "123",
+		},
+	}).Expect().Status(http.StatusOK).JSON().Object()
+	return resp.Value("data").Object().Value("token").String().Raw()
+}
