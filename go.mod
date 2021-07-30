@@ -3,6 +3,7 @@ module github.com/mises-id/sns
 go 1.16
 
 require (
+	github.com/Pallinder/go-randomdata v1.2.0
 	github.com/ajg/form v1.5.1 // indirect
 	github.com/alexflint/go-filemutex v1.1.0 // indirect
 	github.com/bluele/factory-go v0.0.1

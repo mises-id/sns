@@ -1,11 +1,13 @@
 package enum
 
-import "github.com/mises-id/sns/lib/codes"
+import (
+	"github.com/mises-id/sns/lib/codes"
+)
 
 type Gender uint8
 
 const (
-	GenderOther = iota
+	GenderOther Gender = iota
 	GenderMale
 	GenderFemale
 )

@@ -4,12 +4,14 @@ import (
 	"context"
 
 	"github.com/mises-id/sns/config/env"
+	"github.com/mises-id/sns/lib/db/odm"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var (
-	MongoDB *mongo.Database
+	mongoDB   *mongo.Database
+	odmClient *odm.Client
 )
 
 func SetupMongo(ctx context.Context) {
@@ -17,9 +19,14 @@ func SetupMongo(ctx context.Context) {
 	if err != nil {
 		panic(err)
 	}
-	MongoDB = client.Database(env.Envs.DBName)
+	mongoDB = client.Database(env.Envs.DBName)
+	odmClient = odm.NewClient(mongoDB)
 }
 
 func DB() *mongo.Database {
-	return MongoDB
+	return mongoDB
+}
+
+func ODM(ctx context.Context) *odm.DB {
+	return odmClient.NewSession(ctx)
 }
