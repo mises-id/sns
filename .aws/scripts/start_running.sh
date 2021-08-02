@@ -1,1 +1,1 @@
-sudo supervisorctl start mises
+sudo supervisorctl start mises-sns

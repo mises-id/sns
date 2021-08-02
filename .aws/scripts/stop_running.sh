@@ -1,1 +1,1 @@
-sudo supervisorctl stop mises
+sudo supervisorctl stop mises-sns
