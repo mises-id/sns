@@ -13,9 +13,9 @@ var FollowFactory = factory.NewFactory(
 	&models.Follow{},
 ).Attr("ID", func(args factory.Args) (interface{}, error) {
 	return nil, nil
-}).Attr("UID", func(args factory.Args) (interface{}, error) {
+}).Attr("FromUID", func(args factory.Args) (interface{}, error) {
 	return uint64(0), nil
-}).Attr("FocusUID", func(args factory.Args) (interface{}, error) {
+}).Attr("ToUID", func(args factory.Args) (interface{}, error) {
 	return uint64(0), nil
 }).Attr("IsFriend", func(args factory.Args) (interface{}, error) {
 	return false, nil

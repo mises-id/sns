@@ -15,7 +15,7 @@ type PageQuickParams struct {
 func (*PageQuickParams) isPagePrams() {}
 
 func (p *PageQuickParams) GetLimit() int64 {
-	if p.Limit == 0 {
+	if p.Limit <= 0 || p.Limit > 200 {
 		return 50
 	}
 	return p.Limit
@@ -52,9 +52,9 @@ func (p *QuickPaginator) Paginate(dataSource interface{}) (Pagination, error) {
 	db := p.DB
 	var err error
 	if p.NextID != "" {
-		db = db.Where(bson.M{"_id": bson.M{"$lt": p.NextID}})
+		db = db.Where(bson.M{"_id": bson.M{"$lte": p.NextID}})
 	}
-	err = db.Sort("-_id").Limit(p.Limit).Find(dataSource).Error
+	err = db.Sort(bson.M{"_id": -1}).Limit(p.Limit).Find(dataSource).Error
 	if err != nil {
 		return nil, err
 	}
@@ -77,6 +77,6 @@ func (p *QuickPagination) BuildJSONResult() interface{} {
 	return p
 }
 
-func (p *QuickPagination) GetPerPage() int {
+func (p *QuickPagination) GetPageSize() int {
 	return int(p.Limit)
 }

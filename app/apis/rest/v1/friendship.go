@@ -15,13 +15,13 @@ import (
 
 type ListFriendshipParams struct {
 	pagination.TraditionalParams
-	Relate string `query:"relate"`
+	RelationType string `query:"relation_type"`
 }
 
 type FriendshipResp struct {
-	User      *UserResp `json:"user"`
-	Relate    string    `json:"relate"`
-	CreatedAt time.Time `json:"created_at"`
+	User         *UserResp `json:"user"`
+	RelationType string    `json:"relation_type"`
+	CreatedAt    time.Time `json:"created_at"`
 }
 
 func ListFriendship(c echo.Context) error {
@@ -34,15 +34,15 @@ func ListFriendship(c echo.Context) error {
 	if err := c.Bind(params); err != nil {
 		return err
 	}
-	relate, err := enum.RelationTypeFromString(params.Relate)
+	relationType, err := enum.RelationTypeFromString(params.RelationType)
 	if err != nil {
-		relate = enum.Fan
+		relationType = enum.Fan
 	}
-	follows, page, err := followSVC.ListFriendship(c.Request().Context(), uid, relate, &params.TraditionalParams)
+	follows, page, err := followSVC.ListFriendship(c.Request().Context(), uid, relationType, &params.TraditionalParams)
 	if err != nil {
 		return err
 	}
-	resp := batchBuildFriendshipResp(relate, follows)
+	resp := batchBuildFriendshipResp(relationType, follows)
 	return rest.BuildSuccessRespWithPagination(c, resp, page.BuildJSONResult())
 }
 
@@ -74,12 +74,12 @@ func Unfollow(c echo.Context) error {
 	return rest.BuildSuccessResp(c, nil)
 }
 
-func batchBuildFriendshipResp(relate enum.RelationType, friendships []*models.Follow) []*FriendshipResp {
+func batchBuildFriendshipResp(relationType enum.RelationType, friendships []*models.Follow) []*FriendshipResp {
 	resp := make([]*FriendshipResp, len(friendships))
 	for i, friendship := range friendships {
 		user := friendship.ToUser
 		currentRelationType := enum.Following
-		if relate == enum.Fan {
+		if relationType == enum.Fan {
 			user = friendship.FromUser
 			currentRelationType = enum.Fan
 		}
@@ -87,9 +87,9 @@ func batchBuildFriendshipResp(relate enum.RelationType, friendships []*models.Fo
 			currentRelationType = enum.Friend
 		}
 		resp[i] = &FriendshipResp{
-			Relate:    currentRelationType.String(),
-			CreatedAt: friendship.CreatedAt,
-			User:      buildUser(user),
+			RelationType: currentRelationType.String(),
+			CreatedAt:    friendship.CreatedAt,
+			User:         buildUser(user),
 		}
 	}
 	return resp

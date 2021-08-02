@@ -13,13 +13,13 @@ import (
 
 type Follow struct {
 	ID        primitive.ObjectID `bson:"_id,omitempty"`
-	UID       uint64             `bson:"uid,omitempty"`
-	FocusUID  uint64             `bson:"focus_uid,omitempty"`
+	FromUID   uint64             `bson:"from_uid,omitempty"`
+	ToUID     uint64             `bson:"to_uid,omitempty"`
 	IsFriend  bool               `bson:"is_friend,omitempty"`
 	CreatedAt time.Time          `bson:"created_at,omitempty"`
 	UpdatedAt time.Time          `bson:"updated_at,omitempty"`
-	FromUser  *User
-	ToUser    *User
+	FromUser  *User              `bson:"-"`
+	ToUser    *User              `bson:"-"`
 }
 
 func (a *Follow) BeforeCreate(ctx context.Context) error {
@@ -32,13 +32,13 @@ func ListFollow(ctx context.Context, uid uint64, relationType enum.RelationType,
 	follows := make([]*Follow, 0)
 	chain := db.ODM(ctx)
 	if relationType == enum.Fan {
-		chain = chain.Where(bson.M{"focus_uid": uid})
+		chain = chain.Where(bson.M{"to_uid": uid})
 	} else if relationType == enum.Following {
-		chain = chain.Where(bson.M{"uid": uid})
+		chain = chain.Where(bson.M{"from_uid": uid})
 	} else {
-		chain = chain.Where(bson.M{"uid": uid, "is_friend": true})
+		chain = chain.Where(bson.M{"from_uid": uid, "is_friend": true})
 	}
-	paginator := pagination.NewTraditionalPaginator(pageParams.Page, pageParams.PerPage, chain)
+	paginator := pagination.NewTraditionalPaginator(pageParams.PageNum, pageParams.PageSize, chain)
 	page, err := paginator.Paginate(&follows)
 	if err != nil {
 		return nil, nil, err
@@ -46,10 +46,10 @@ func ListFollow(ctx context.Context, uid uint64, relationType enum.RelationType,
 	return follows, page, preloadFollowUser(ctx, follows)
 }
 
-func CreateFollow(ctx context.Context, uid, focusUID uint64, isFriend bool) (*Follow, error) {
+func CreateFollow(ctx context.Context, fromUID, toUID uint64, isFriend bool) (*Follow, error) {
 	follow := &Follow{
-		UID:      uid,
-		FocusUID: focusUID,
+		FromUID:  fromUID,
+		ToUID:    toUID,
 		IsFriend: isFriend,
 	}
 	if err := follow.BeforeCreate(ctx); err != nil {
@@ -69,11 +69,11 @@ func (f *Follow) SetFriend(ctx context.Context, isFriend bool) error {
 	return err
 }
 
-func GetFollow(ctx context.Context, uid, focusUID uint64) (*Follow, error) {
+func GetFollow(ctx context.Context, fromUID, toUID uint64) (*Follow, error) {
 	follow := &Follow{}
 	result := db.DB().Collection("follows").FindOne(ctx, &bson.M{
-		"uid":       uid,
-		"focus_uid": focusUID,
+		"from_uid": fromUID,
+		"to_uid":   toUID,
 	})
 	err := result.Err()
 	if err != nil {
@@ -82,15 +82,15 @@ func GetFollow(ctx context.Context, uid, focusUID uint64) (*Follow, error) {
 	return follow, result.Decode(follow)
 }
 
-func DeleteFollow(ctx context.Context, uid, focusUID uint64) error {
-	_, err := db.DB().Collection("follows").DeleteOne(ctx, bson.M{"uid": uid, "focus_uid": focusUID})
+func DeleteFollow(ctx context.Context, fromUID, toUID uint64) error {
+	_, err := db.DB().Collection("follows").DeleteOne(ctx, bson.M{"from_uid": fromUID, "to_uid": toUID})
 	return err
 }
 
 func preloadFollowUser(ctx context.Context, follows []*Follow) error {
 	userIds := make([]uint64, 0)
 	for _, follow := range follows {
-		userIds = append(userIds, follow.UID, follow.FocusUID)
+		userIds = append(userIds, follow.FromUID, follow.ToUID)
 	}
 	users := make([]*User, 0)
 	err := db.ODM(ctx).Where(bson.M{"_id": bson.M{"$in": userIds}}).Find(&users).Error
@@ -102,8 +102,8 @@ func preloadFollowUser(ctx context.Context, follows []*Follow) error {
 		userMap[user.UID] = user
 	}
 	for _, follow := range follows {
-		follow.FromUser = userMap[follow.UID]
-		follow.ToUser = userMap[follow.FocusUID]
+		follow.FromUser = userMap[follow.FromUID]
+		follow.ToUser = userMap[follow.ToUID]
 	}
 	return nil
 }

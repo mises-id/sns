@@ -2,7 +2,7 @@ package pagination
 
 type Pagination interface {
 	BuildJSONResult() interface{}
-	GetPerPage() int
+	GetPageSize() int
 }
 
 type PageParams interface {

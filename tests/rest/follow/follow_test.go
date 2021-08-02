@@ -32,7 +32,7 @@ func (suite *FollowServerSuite) SetupTest() {
 }
 
 func (suite *FollowServerSuite) TearDownTest() {
-	suite.Clean(suite.collections...)
+	// suite.Clean(suite.collections...)
 }
 
 func TestFollowServer(t *testing.T) {
@@ -47,15 +47,15 @@ func (suite *FollowServerSuite) TestListFriendship() {
 		isFriend := i > 7
 		if i <= 3 || i > 7 {
 			factories.FollowFactory.MustCreateWithOption(map[string]interface{}{
-				"UID":      user1.UID,
-				"FocusUID": users[i].UID,
+				"FromUID":  user1.UID,
+				"ToUID":    users[i].UID,
 				"IsFriend": isFriend,
 			})
 		}
 		if i > 3 {
 			factories.FollowFactory.MustCreateWithOption(map[string]interface{}{
-				"UID":      users[i].UID,
-				"FocusUID": user1.UID,
+				"FromUID":  users[i].UID,
+				"ToUID":    user1.UID,
 				"IsFriend": isFriend,
 			})
 		}
@@ -69,30 +69,30 @@ func (suite *FollowServerSuite) TestListFriendship() {
 	})
 
 	suite.T().Run("list fans", func(t *testing.T) {
-		resp := suite.Expect.GET("/api/v1/user/1/friendship").WithQuery("relate", "fans").
+		resp := suite.Expect.GET("/api/v1/user/1/friendship").WithQuery("relation_type", "fans").
 			Expect().Status(http.StatusOK).JSON().Object()
 		resp.Value("code").Equal(0)
 		resp.Value("data").Array().Length().Equal(8)
-		resp.Value("data").Array().First().Object().Value("relate").Equal("friend")
+		resp.Value("data").Array().First().Object().Value("relation_type").Equal("friend")
 		resp.Value("data").Array().First().Object().Value("user").Object().Value("uid").Equal(13)
 		resp.Value("data").Array().Last().Object().Value("user").Object().Value("uid").Equal(6)
-		resp.Value("data").Array().Last().Object().Value("relate").Equal("fan")
+		resp.Value("data").Array().Last().Object().Value("relation_type").Equal("fan")
 		resp.Value("pagination").Object().Value("total_records").Equal(8)
 	})
 
 	suite.T().Run("list folloing", func(t *testing.T) {
-		resp := suite.Expect.GET("/api/v1/user/1/friendship").WithQuery("relate", "following").
+		resp := suite.Expect.GET("/api/v1/user/1/friendship").WithQuery("relation_type", "following").
 			Expect().Status(http.StatusOK).JSON().Object()
 		resp.Value("code").Equal(0)
 		resp.Value("data").Array().Length().Equal(8)
-		resp.Value("data").Array().First().Object().Value("relate").Equal("friend")
+		resp.Value("data").Array().First().Object().Value("relation_type").Equal("friend")
 		resp.Value("data").Array().First().Object().Value("user").Object().Value("uid").Equal(13)
 		resp.Value("data").Array().Last().Object().Value("user").Object().Value("uid").Equal(2)
-		resp.Value("data").Array().Last().Object().Value("relate").Equal("following")
+		resp.Value("data").Array().Last().Object().Value("relation_type").Equal("following")
 	})
 
 	suite.T().Run("list friend", func(t *testing.T) {
-		resp := suite.Expect.GET("/api/v1/user/1/friendship").WithQuery("relate", "friend").
+		resp := suite.Expect.GET("/api/v1/user/1/friendship").WithQuery("relation_type", "friend").
 			Expect().Status(http.StatusOK).JSON().Object()
 		resp.Value("code").Equal(0)
 		resp.Value("data").Array().Length().Equal(4)
@@ -100,9 +100,9 @@ func (suite *FollowServerSuite) TestListFriendship() {
 	})
 
 	suite.T().Run("list page", func(t *testing.T) {
-		resp := suite.Expect.GET("/api/v1/user/1/friendship").WithQuery("relate", "fans").
-			WithQuery("per_page", "3").
-			WithQuery("page", "2").
+		resp := suite.Expect.GET("/api/v1/user/1/friendship").WithQuery("relation_type", "fans").
+			WithQuery("page_size", "3").
+			WithQuery("page_num", "2").
 			Expect().Status(http.StatusOK).JSON().Object()
 		resp.Value("code").Equal(0)
 		resp.Value("data").Array().Length().Equal(3)

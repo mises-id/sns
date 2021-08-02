@@ -21,36 +21,39 @@ func ListFriendship(ctx context.Context, uid uint64, relationType enum.RelationT
 func Follow(ctx context.Context, uid, focusUserID uint64) (*models.Follow, error) {
 	isFriend := false
 	follow, err := models.GetFollow(ctx, uid, focusUserID)
-	if err == nil {
-		return follow, nil
-	}
-	if err != mongo.ErrNoDocuments {
+	if err != nil && err != mongo.ErrNoDocuments {
 		return nil, err
 	}
 	fansFollow, err := models.GetFollow(ctx, focusUserID, uid)
+	if err != nil && err != mongo.ErrNoDocuments {
+		return nil, err
+	}
 	if err == nil {
 		isFriend = true
-		if err = fansFollow.SetFriend(ctx, true); err != nil {
-			return nil, err
+		if !fansFollow.IsFriend {
+			if err = fansFollow.SetFriend(ctx, true); err != nil {
+				return nil, err
+			}
 		}
-	} else if err != mongo.ErrNoDocuments {
-		return nil, err
+	}
+	if follow != nil {
+		return follow, follow.SetFriend(ctx, isFriend)
 	}
 	return models.CreateFollow(ctx, uid, focusUserID, isFriend)
 }
 
-func Unfollow(ctx context.Context, uid, focusUserID uint64) error {
-	_, err := models.GetFollow(ctx, uid, focusUserID)
+func Unfollow(ctx context.Context, fromUID, toUID uint64) error {
+	_, err := models.GetFollow(ctx, fromUID, toUID)
 	if err != nil {
 		return nil
 	}
-	fansFollow, err := models.GetFollow(ctx, focusUserID, uid)
-	if err == nil {
+	fansFollow, err := models.GetFollow(ctx, toUID, fromUID)
+	if err == nil && fansFollow.IsFriend {
 		if err = fansFollow.SetFriend(ctx, false); err != nil {
 			return err
 		}
 	} else if err != mongo.ErrNoDocuments {
 		return err
 	}
-	return models.DeleteFollow(ctx, uid, focusUserID)
+	return models.DeleteFollow(ctx, fromUID, toUID)
 }
