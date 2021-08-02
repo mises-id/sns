@@ -17,6 +17,8 @@ type Env struct {
 	AppEnv          string `env:"APP_ENV" envDefault:"development"`
 	LogLevel        string `env:"LOG_LEVEL" envDefault:"INFO"`
 	MongoURI        string `env:"MONGO_URI,required"`
+	DBUser          string `env:"DB_USER"`
+	DBPass          string `env:"DB_PASS"`
 	DBName          string `env:"DB_NAME" envDefault:"mises"`
 	AssetHost       string `env:"ASSET_HOST" envDefault:"http://localhost/"`
 	StorageProvider string `env:"STORAGE_PROVIDER" envDefault:"local"`

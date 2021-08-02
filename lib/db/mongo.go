@@ -15,7 +15,14 @@ var (
 )
 
 func SetupMongo(ctx context.Context) {
-	client, err := mongo.Connect(ctx, options.Client().SetMaxPoolSize(30).ApplyURI(env.Envs.MongoURI))
+	clientOpts := options.Client().SetMaxPoolSize(30).ApplyURI(env.Envs.MongoURI)
+	if env.Envs.DBUser != "" {
+		clientOpts.SetAuth(options.Credential{
+			Username: env.Envs.DBUser,
+			Password: env.Envs.DBPass,
+		})
+	}
+	client, err := mongo.Connect(ctx, clientOpts)
 	if err != nil {
 		panic(err)
 	}
