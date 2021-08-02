@@ -51,9 +51,11 @@ func (suite *UserServerSuite) TestFindUser() {
 	factories.InitUsers(&models.User{
 		UID:      1,
 		AvatarID: 1,
+		Misesid:  "123",
 		Gender:   enum.GenderMale,
 	}, &models.User{
 		UID:      2,
+		Misesid:  "456",
 		Gender:   enum.GenderMale,
 		AvatarID: 0,
 	})
