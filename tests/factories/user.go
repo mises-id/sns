@@ -4,21 +4,22 @@ import (
 	"context"
 
 	"github.com/bluele/factory-go/factory"
+	"github.com/google/uuid"
 	"github.com/mises-id/sns/app/models"
 	"github.com/mises-id/sns/app/models/enum"
 	"github.com/mises-id/sns/lib/db"
 )
 
-var userFactory = factory.NewFactory(
+var UserFactory = factory.NewFactory(
 	&models.User{},
-).Attr("UID", func(args factory.Args) (interface{}, error) {
-	return uint64(0), nil
+).SeqInt("UID", func(n int) (interface{}, error) {
+	return uint64(n), nil
 }).Attr("Username", func(args factory.Args) (interface{}, error) {
 	return "", nil
-}).Attr("Misesid", func(args factory.Args) (interface{}, error) {
-	return "", nil
 }).Attr("Gender", func(args factory.Args) (interface{}, error) {
-	return enum.GenderOther, nil
+	return enum.GenderFemale, nil
+}).Attr("Misesid", func(args factory.Args) (interface{}, error) {
+	return uuid.New().String(), nil
 }).Attr("Mobile", func(args factory.Args) (interface{}, error) {
 	return "", nil
 }).Attr("Email", func(args factory.Args) (interface{}, error) {
@@ -34,7 +35,7 @@ var userFactory = factory.NewFactory(
 
 func InitUsers(args ...*models.User) {
 	for _, arg := range args {
-		userFactory.MustCreateWithOption(map[string]interface{}{
+		UserFactory.MustCreateWithOption(map[string]interface{}{
 			"UID":      arg.UID,
 			"Username": arg.Username,
 			"Misesid":  arg.Misesid,

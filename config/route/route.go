@@ -17,8 +17,11 @@ func SetRoutes(e *echo.Echo) {
 	groupV1.POST("/attachment", v1.Upload)
 	groupV1.GET("/user/:uid", v1.FindUser)
 	groupV1.POST("/signin", v1.SignIn)
+	groupV1.GET("/user/:uid/friendship", v1.ListFriendship)
 
 	userGroup := e.Group("/api/v1", mw.ErrorResponseMiddleware, appmw.SetCurrentUserMiddleware, appmw.RequireCurrentUserMiddleware)
 	userGroup.GET("/user/me", v1.MyProfile)
 	userGroup.PATCH("/user/me", v1.UpdateUser)
+	userGroup.POST("/user/follow", v1.Follow)
+	userGroup.DELETE("/user/follow", v1.Unfollow)
 }

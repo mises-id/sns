@@ -3,6 +3,7 @@ module github.com/mises-id/sns
 go 1.16
 
 require (
+	github.com/Pallinder/go-randomdata v1.2.0
 	github.com/ajg/form v1.5.1 // indirect
 	github.com/alexflint/go-filemutex v1.1.0 // indirect
 	github.com/bluele/factory-go v0.0.1
@@ -13,6 +14,7 @@ require (
 	github.com/gavv/httpexpect v2.0.0+incompatible
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/google/go-github/v33 v33.0.0
+	github.com/google/uuid v1.3.0
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/imkira/go-interpol v1.1.0 // indirect
 	github.com/joho/godotenv v1.3.0

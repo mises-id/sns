@@ -51,8 +51,10 @@ func (suite *UserServerSuite) TestFindUser() {
 	factories.InitUsers(&models.User{
 		UID:      1,
 		AvatarID: 1,
+		Gender:   enum.GenderMale,
 	}, &models.User{
 		UID:      2,
+		Gender:   enum.GenderMale,
 		AvatarID: 0,
 	})
 	suite.T().Run("not found user", func(t *testing.T) {
@@ -84,6 +86,7 @@ func (suite *UserServerSuite) TestSignin() {
 		UID:      1001,
 		AvatarID: 0,
 		Misesid:  "123",
+		Gender:   enum.GenderMale,
 	})
 	factories.InitAttachments(&models.Attachment{
 		ID:        1,
@@ -117,6 +120,7 @@ func (suite *UserServerSuite) TestSignin() {
 func (suite *UserServerSuite) TestUpdateUser() {
 	factories.InitUsers(&models.User{
 		UID:      1001,
+		Gender:   enum.GenderFemale,
 		AvatarID: 0,
 		Misesid:  "123",
 	})
