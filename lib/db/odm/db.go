@@ -87,10 +87,11 @@ func (db *DB) Skip(skip int64) *DB {
 }
 
 func (db *DB) First(out interface{}, conditions ...bson.M) *DB {
+	db.out = out
 	for _, condition := range conditions {
 		db = db.Where(condition)
 	}
-	result := db.db.Collection(db.reflectCollectionName()).FindOne(db.ctx, db.condition, &options.FindOneOptions{Sort: "_id"})
+	result := db.db.Collection(db.reflectCollectionName()).FindOne(db.ctx, db.condition, &options.FindOneOptions{Sort: bson.M{"_id": 1}})
 	db.Error = result.Err()
 	if db.Error != nil {
 		return db
@@ -104,7 +105,7 @@ func (db *DB) Last(out interface{}, conditions ...bson.M) *DB {
 	for _, condition := range conditions {
 		db = db.Where(condition)
 	}
-	result := db.db.Collection(db.reflectCollectionName()).FindOne(db.ctx, db.condition, &options.FindOneOptions{Sort: "-_id"})
+	result := db.db.Collection(db.reflectCollectionName()).FindOne(db.ctx, db.condition, &options.FindOneOptions{Sort: bson.M{"_id": -1}})
 	db.Error = result.Err()
 	if db.Error != nil {
 		return db

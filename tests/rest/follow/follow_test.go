@@ -6,9 +6,11 @@ import (
 	"testing"
 
 	"github.com/mises-id/sns/app/models"
+	"github.com/mises-id/sns/lib/db"
 	"github.com/mises-id/sns/tests/factories"
 	"github.com/mises-id/sns/tests/rest"
 	"github.com/stretchr/testify/suite"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -120,6 +122,16 @@ func (suite *FollowServerSuite) TestListFriendship() {
 		suite.False(f.IsFriend)
 		_, err = models.GetFollow(context.Background(), user2.UID, 1)
 		suite.Equal(err, mongo.ErrNoDocuments)
+
+		u1, u2 := &models.User{}, &models.User{}
+		err = db.ODM(context.Background()).First(u1, bson.M{"_id": user1.UID}).Error
+		suite.Nil(err)
+		db.ODM(context.Background()).First(u2, bson.M{"_id": user2.UID})
+		suite.Nil(err)
+		suite.Equal(int64(0), u1.FansCount)
+		suite.Equal(int64(1), u1.FollowingCount)
+		suite.Equal(int64(1), u2.FansCount)
+		suite.Equal(int64(0), u2.FollowingCount)
 	})
 
 	suite.T().Run("follow fans", func(t *testing.T) {

@@ -5,6 +5,7 @@ import (
 
 	"github.com/mises-id/sns/app/models"
 	"github.com/mises-id/sns/app/models/enum"
+	"github.com/mises-id/sns/lib/codes"
 	"github.com/mises-id/sns/lib/pagination"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -18,13 +19,24 @@ func ListFriendship(ctx context.Context, uid uint64, relationType enum.RelationT
 	return models.ListFollow(ctx, uid, relationType, pageParams)
 }
 
-func Follow(ctx context.Context, uid, focusUserID uint64) (*models.Follow, error) {
+func Follow(ctx context.Context, fromUID, toUID uint64) (*models.Follow, error) {
+	if fromUID == toUID {
+		return nil, codes.ErrInvalidArgument
+	}
+	fromUser, err := models.FindUser(ctx, fromUID)
+	if err != nil {
+		return nil, err
+	}
+	toUser, err := models.FindUser(ctx, toUID)
+	if err != nil {
+		return nil, err
+	}
 	isFriend := false
-	follow, err := models.GetFollow(ctx, uid, focusUserID)
+	follow, err := models.GetFollow(ctx, fromUID, toUID)
 	if err != nil && err != mongo.ErrNoDocuments {
 		return nil, err
 	}
-	fansFollow, err := models.GetFollow(ctx, focusUserID, uid)
+	fansFollow, err := models.GetFollow(ctx, toUID, fromUID)
 	if err != nil && err != mongo.ErrNoDocuments {
 		return nil, err
 	}
@@ -39,7 +51,14 @@ func Follow(ctx context.Context, uid, focusUserID uint64) (*models.Follow, error
 	if follow != nil {
 		return follow, follow.SetFriend(ctx, isFriend)
 	}
-	return models.CreateFollow(ctx, uid, focusUserID, isFriend)
+	if err = fromUser.IncFollowingCount(ctx); err != nil {
+		return nil, err
+	}
+	if err = toUser.IncFansCount(ctx); err != nil {
+		return nil, err
+	}
+
+	return models.CreateFollow(ctx, fromUID, toUID, isFriend)
 }
 
 func Unfollow(ctx context.Context, fromUID, toUID uint64) error {
