@@ -5,6 +5,7 @@ import (
 	"sort"
 
 	"github.com/khaiql/dbcleaner"
+	"github.com/mises-id/sns/app/models"
 	"github.com/mises-id/sns/lib/db"
 	"github.com/stretchr/testify/suite"
 )
@@ -28,6 +29,7 @@ func (suite *BaseTestSuite) Clean(collections ...string) {
 	for _, collection := range collections {
 		_ = db.DB().Collection(collection).Drop(context.Background())
 	}
+	models.EnsureIndex()
 }
 
 func (suite *BaseTestSuite) Acquire(collections ...string) {

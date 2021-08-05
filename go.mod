@@ -3,7 +3,6 @@ module github.com/mises-id/sns
 go 1.16
 
 require (
-	github.com/Pallinder/go-randomdata v1.2.0
 	github.com/ajg/form v1.5.1 // indirect
 	github.com/alexflint/go-filemutex v1.1.0 // indirect
 	github.com/bluele/factory-go v0.0.1
@@ -29,6 +28,7 @@ require (
 	github.com/sirupsen/logrus v1.4.2
 	github.com/smartystreets/goconvey v1.6.4 // indirect
 	github.com/stretchr/testify v1.7.0
+	github.com/urfave/cli v1.22.5
 	github.com/valyala/fasthttp v1.28.0 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
 	github.com/yalp/jsonpath v0.0.0-20180802001716-5cc68e5049a0 // indirect
