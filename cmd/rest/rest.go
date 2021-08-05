@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/labstack/echo"
@@ -24,6 +25,10 @@ func Start(ctx context.Context) error {
 	}))
 	e.Use(middleware.Recover())
 	e.Use(middleware.RequestID())
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: strings.Split(env.Envs.AllowOrigins, ","),
+		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
+	}))
 	route.SetRoutes(e)
 	go func() {
 		if err := e.Start(fmt.Sprintf(":%d", env.Envs.Port)); err != nil {
