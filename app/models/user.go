@@ -11,17 +11,19 @@ import (
 )
 
 type User struct {
-	UID       uint64      `bson:"_id"`
-	Username  string      `bson:"username,omitempty"`
-	Misesid   string      `bson:"misesid,omitempty"`
-	Gender    enum.Gender `bson:"gender,misesid"`
-	Mobile    string      `bson:"mobile,omitempty"`
-	Email     string      `bson:"email,omitempty"`
-	Address   string      `bson:"address,omitempty"`
-	AvatarID  uint64      `bson:"avatar_id,omitempty"`
-	CreatedAt time.Time   `bson:"created_at,omitempty"`
-	UpdatedAt time.Time   `bson:"updated_at,omitempty"`
-	Avatar    *Attachment
+	UID            uint64      `bson:"_id"`
+	Username       string      `bson:"username,omitempty"`
+	Misesid        string      `bson:"misesid,omitempty"`
+	Gender         enum.Gender `bson:"gender,misesid"`
+	Mobile         string      `bson:"mobile,omitempty"`
+	Email          string      `bson:"email,omitempty"`
+	Address        string      `bson:"address,omitempty"`
+	AvatarID       uint64      `bson:"avatar_id,omitempty"`
+	FollowingCount int64       `bson:"following_count,omitempty"`
+	FansCount      int64       `bson:"fans_count,omitempty"`
+	CreatedAt      time.Time   `bson:"created_at,omitempty"`
+	UpdatedAt      time.Time   `bson:"updated_at,omitempty"`
+	Avatar         *Attachment `bson:"-"`
 }
 
 func (u *User) BeforeCreate(ctx context.Context) error {
@@ -37,6 +39,28 @@ func (u *User) BeforeCreate(ctx context.Context) error {
 func (u *User) BeforeUpdate(ctx context.Context) error {
 	u.UpdatedAt = time.Now()
 	return nil
+}
+
+func (u *User) IncFollowingCount(ctx context.Context) error {
+	return db.DB().Collection("users").FindOneAndUpdate(ctx, bson.M{"_id": u.UID},
+		bson.D{{
+			Key: "$inc",
+			Value: bson.D{{
+				Key:   "following_count",
+				Value: 1,
+			}}},
+		}).Err()
+}
+
+func (u *User) IncFansCount(ctx context.Context) error {
+	return db.DB().Collection("users").FindOneAndUpdate(ctx, bson.M{"_id": u.UID},
+		bson.D{{
+			Key: "$inc",
+			Value: bson.D{{
+				Key:   "fans_count",
+				Value: 1,
+			}}},
+		}).Err()
 }
 
 func FindUser(ctx context.Context, uid uint64) (*User, error) {
