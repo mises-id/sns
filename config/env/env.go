@@ -23,6 +23,7 @@ type Env struct {
 	AssetHost       string `env:"ASSET_HOST" envDefault:"http://localhost/"`
 	StorageProvider string `env:"STORAGE_PROVIDER" envDefault:"local"`
 	JWTSecret       string `env:"JWT_SECRET,required"`
+	AllowOrigins    string `env:"ALLOW_ORIGINS" envDefault:""`
 	RootPath        string
 }
 
