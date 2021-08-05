@@ -2,11 +2,13 @@ package odm
 
 import (
 	"context"
+	"errors"
 	"log"
 	"reflect"
 	"strings"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -49,6 +51,28 @@ func (db *DB) Collection(collectionName string) *DB {
 func (db *DB) Model(model interface{}) *DB {
 	db.collectionName = ""
 	db.reflectCollectionName(model)
+	return db
+}
+
+func (db *DB) Create(out interface{}) *DB {
+	db.out = out
+	result, err := db.db.Collection(db.reflectCollectionName()).InsertOne(db.ctx, out)
+	if err != nil {
+		db.Error = err
+		return db
+	}
+	value := reflect.ValueOf(out).Elem()
+	idValue := value.FieldByName("ID")
+	resultID, ok := result.InsertedID.(primitive.ObjectID)
+	if !ok {
+		db.Error = errors.New("invalid inserted id")
+		return db
+	}
+	if idValue.IsValid() {
+		if idValue.CanSet() {
+			idValue.SetBytes(resultID[:])
+		}
+	}
 	return db
 }
 
