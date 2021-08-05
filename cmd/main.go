@@ -30,6 +30,10 @@ func main() {
 	}))
 	e.Use(middleware.Recover())
 	e.Use(middleware.RequestID())
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"http://localhost", "http://18.118.47.21", "*"},
+		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
+	}))
 	route.SetRoutes(e)
 	go func() {
 		if err := e.Start(fmt.Sprintf(":%d", env.Envs.Port)); err != nil {
