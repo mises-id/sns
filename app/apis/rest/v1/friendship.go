@@ -18,6 +18,10 @@ type ListFriendshipParams struct {
 	RelationType string `query:"relation_type"`
 }
 
+type FollowParams struct {
+	ToUserID uint64 `json:"to_user_id"`
+}
+
 type FriendshipResp struct {
 	User         *UserResp `json:"user"`
 	RelationType string    `json:"relation_type"`
@@ -48,12 +52,11 @@ func ListFriendship(c echo.Context) error {
 
 func Follow(c echo.Context) error {
 	uid := c.Get("CurrentUser").(*models.User).UID
-	uidParam := c.QueryParam("to_user")
-	toUserID, err := strconv.ParseUint(uidParam, 10, 64)
-	if err != nil {
-		return codes.ErrInvalidArgument.Newf("invalid to user id %s", uidParam)
+	params := &FollowParams{}
+	if err := c.Bind(params); err != nil {
+		return codes.ErrInvalidArgument
 	}
-	_, err = followSVC.Follow(c.Request().Context(), uid, toUserID)
+	_, err := followSVC.Follow(c.Request().Context(), uid, params.ToUserID)
 	if err != nil {
 		return err
 	}
@@ -62,12 +65,11 @@ func Follow(c echo.Context) error {
 
 func Unfollow(c echo.Context) error {
 	uid := c.Get("CurrentUser").(*models.User).UID
-	uidParam := c.QueryParam("to_user")
-	toUserID, err := strconv.ParseUint(uidParam, 10, 64)
-	if err != nil {
-		return codes.ErrInvalidArgument.Newf("invalid to user id %s", uidParam)
+	params := &FollowParams{}
+	if err := c.Bind(params); err != nil {
+		return codes.ErrInvalidArgument
 	}
-	err = followSVC.Unfollow(c.Request().Context(), uid, toUserID)
+	err := followSVC.Unfollow(c.Request().Context(), uid, params.ToUserID)
 	if err != nil {
 		return err
 	}

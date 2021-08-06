@@ -97,22 +97,23 @@ func (suite *UserServerSuite) TestSignin() {
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	})
+
 	suite.T().Run("user signin success", func(t *testing.T) {
+		suite.MockMisesAuth("123:123")
 		resp := suite.Expect.POST("/api/v1/signin").WithJSON(map[string]interface{}{
 			"provider": "mises",
 			"user_authz": map[string]interface{}{
-				"misesid":   "123",
-				"auth_code": "123",
+				"auth": "123:123",
 			},
 		}).Expect().Status(http.StatusOK).JSON().Object()
 		resp.Value("code").Equal(0)
 	})
 	suite.T().Run("create new success", func(t *testing.T) {
+		suite.MockMisesAuth("234:234")
 		resp := suite.Expect.POST("/api/v1/signin").WithJSON(map[string]interface{}{
 			"provider": "mises",
 			"user_authz": map[string]interface{}{
-				"misesid":   "234",
-				"auth_code": "234",
+				"auth": "234:234",
 			},
 		}).Expect().Status(http.StatusOK).JSON().Object()
 		resp.Value("code").Equal(0)
@@ -126,7 +127,7 @@ func (suite *UserServerSuite) TestUpdateUser() {
 		AvatarID: 0,
 		Misesid:  "123",
 	})
-	token := suite.LoginUser("123")
+	token := suite.MockLoginUser("123:123")
 	suite.T().Run("update username success", func(t *testing.T) {
 		resp := suite.Expect.PATCH("/api/v1/user/me").WithJSON(map[string]interface{}{
 			"by": "username",
