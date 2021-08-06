@@ -20,8 +20,8 @@ func init() {
 	misesClient = mises.New()
 }
 
-func SignIn(ctx context.Context, misesid, auth_code string) (string, error) {
-	err := misesClient.Auth(misesid, auth_code)
+func SignIn(ctx context.Context, auth string) (string, error) {
+	misesid, err := misesClient.Auth(auth)
 	if err != nil {
 		return "", err
 	}
@@ -33,7 +33,7 @@ func SignIn(ctx context.Context, misesid, auth_code string) (string, error) {
 		"uid":      user.UID,
 		"misesid":  user.Misesid,
 		"username": user.Username,
-		"exp":      time.Now().Add(time.Minute * 15).Unix(),
+		"exp":      time.Now().Add(time.Hour * env.Envs.TokenDuration).Unix(),
 	})
 	return at.SignedString([]byte(secret))
 }
@@ -54,4 +54,8 @@ func Auth(ctx context.Context, authToken string) (*models.User, error) {
 		Misesid:  mapClaims["misesid"].(string),
 		Username: mapClaims["username"].(string),
 	}, nil
+}
+
+func MockMisesClient(mock mises.Client) {
+	misesClient = mock
 }

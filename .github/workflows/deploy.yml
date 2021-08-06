@@ -27,6 +27,8 @@ jobs:
       - name: Compile
         run: |
           CGO_ENABLED=0 go build -o outupt/mises cmd/main.go
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Config
         run: |
           cp -rf .aws/* outupt/

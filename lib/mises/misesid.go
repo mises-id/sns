@@ -1,21 +1,40 @@
 package mises
 
+import (
+	"log"
+
+	"github.com/mises-id/sdk"
+	"github.com/mises-id/sdk/types"
+	"github.com/mises-id/sdk/user"
+	"github.com/mises-id/sns/config/env"
+)
+
+func init() {
+	if env.Envs.MisesTestEndpoint != "" {
+		if err := user.SetTestEndpoint(env.Envs.MisesTestEndpoint); err != nil {
+			log.Fatal("init mises sdk test endpoint error")
+		}
+	}
+}
+
 type User struct {
 	ID string
 }
 
 type Client interface {
-	Auth(misesid, code string) error
+	Auth(auth string) (string, error)
 }
 
 type ClientImpl struct {
+	client types.MSdk
 }
 
-// TODO mises auth
-func (c *ClientImpl) Auth(misesid, code string) error {
-	return nil
+func (c *ClientImpl) Auth(auth string) (string, error) {
+	return c.client.VerifyLogin(auth)
 }
 
 func New() Client {
-	return &ClientImpl{}
+	return &ClientImpl{
+		client: sdk.NewSdkForUser(sdk.MSdkOption{}, ""),
+	}
 }
