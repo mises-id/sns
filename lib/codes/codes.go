@@ -52,6 +52,7 @@ const (
 	InvalidAuthMethodCode = 400002
 	InvalidAuthTokenCode  = 400003
 	UnauthorizedCode      = 401000
+	AuthorizeFailedCode   = 401001
 	ForbiddenCode         = 403000
 	UsernameExsistedCode  = 403001
 	TokenExpiredCode      = 403002
@@ -67,6 +68,7 @@ var (
 	ErrInvalidAuthMethod = Code{HTTPStatus: http.StatusBadRequest, Code: InvalidAuthMethodCode, Msg: "invalid auth method"}
 	ErrInvalidAuthToken  = Code{HTTPStatus: http.StatusBadRequest, Code: InvalidAuthTokenCode, Msg: "invalid auth token"}
 	ErrUnauthorized      = Code{HTTPStatus: http.StatusUnauthorized, Code: UnauthorizedCode, Msg: "unauthorized"}
+	ErrAuthorizeFailed   = Code{HTTPStatus: http.StatusUnauthorized, Code: AuthorizeFailedCode, Msg: "authorize failed"}
 	ErrForbidden         = Code{HTTPStatus: http.StatusForbidden, Code: ForbiddenCode, Msg: "forbidden"}
 	ErrUsernameExsisted  = Code{HTTPStatus: http.StatusForbidden, Code: UsernameExsistedCode, Msg: "username update forbidden"}
 	ErrTokenExpired      = Code{HTTPStatus: http.StatusForbidden, Code: TokenExpiredCode, Msg: "authorization expired"}

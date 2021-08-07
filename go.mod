@@ -12,6 +12,7 @@ require (
 	github.com/fatih/structs v1.1.0 // indirect
 	github.com/gavv/httpexpect v2.0.0+incompatible
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
+	github.com/golang/mock v1.4.4
 	github.com/google/go-github/v33 v33.0.0
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/websocket v1.4.2 // indirect
@@ -22,6 +23,7 @@ require (
 	github.com/labstack/gommon v0.3.0 // indirect
 	github.com/lib/pq v1.10.2 // indirect
 	github.com/mattn/go-sqlite3 v1.14.8 // indirect
+	github.com/mises-id/sdk v0.0.0-20210805141647-2016870a254a
 	github.com/moul/http2curl v1.0.0 // indirect
 	github.com/onsi/gomega v1.14.0 // indirect
 	github.com/sergi/go-diff v1.2.0 // indirect
@@ -38,4 +40,5 @@ require (
 	go.mongodb.org/mongo-driver v1.6.0
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97 // indirect
 	golang.org/x/oauth2 v0.0.0-20210628180205-a41e5a781914
+	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c // indirect
 )

@@ -34,7 +34,7 @@ func (suite *FollowServerSuite) SetupTest() {
 }
 
 func (suite *FollowServerSuite) TearDownTest() {
-	// suite.Clean(suite.collections...)
+	suite.Clean(suite.collections...)
 }
 
 func TestFollowServer(t *testing.T) {
@@ -112,9 +112,9 @@ func (suite *FollowServerSuite) TestListFriendship() {
 		resp.Value("pagination").Object().Value("total_pages").Equal(3)
 	})
 
-	token := suite.LoginUser(user1.Misesid)
+	token := suite.MockLoginUser(user1.Misesid + ":123")
 	suite.T().Run("follow stranger", func(t *testing.T) {
-		resp := suite.Expect.POST("/api/v1/user/follow").WithQuery("to_user", user2.UID).
+		resp := suite.Expect.POST("/api/v1/user/follow").WithJSON(map[string]interface{}{"to_user_id": user2.UID}).
 			WithHeader("Authorization", "Bearer "+token).Expect().Status(http.StatusOK).JSON().Object()
 		resp.Value("code").Equal(0)
 		f, err := models.GetFollow(context.Background(), 1, user2.UID)
@@ -135,7 +135,7 @@ func (suite *FollowServerSuite) TestListFriendship() {
 	})
 
 	suite.T().Run("follow fans", func(t *testing.T) {
-		resp := suite.Expect.POST("/api/v1/user/follow").WithQuery("to_user", 6).
+		resp := suite.Expect.POST("/api/v1/user/follow").WithJSON(map[string]interface{}{"to_user_id": 6}).
 			WithHeader("Authorization", "Bearer "+token).Expect().Status(http.StatusOK).JSON().Object()
 		resp.Value("code").Equal(0)
 		f, err := models.GetFollow(context.Background(), 1, 6)
@@ -147,7 +147,7 @@ func (suite *FollowServerSuite) TestListFriendship() {
 	})
 
 	suite.T().Run("unfollow focus user", func(t *testing.T) {
-		resp := suite.Expect.DELETE("/api/v1/user/follow").WithQuery("to_user", user2.UID).
+		resp := suite.Expect.DELETE("/api/v1/user/follow").WithJSON(map[string]interface{}{"to_user_id": user2.UID}).
 			WithHeader("Authorization", "Bearer "+token).Expect().Status(http.StatusOK).JSON().Object()
 		resp.Value("code").Equal(0)
 		_, err := models.GetFollow(context.Background(), 1, user2.UID)
@@ -155,7 +155,7 @@ func (suite *FollowServerSuite) TestListFriendship() {
 	})
 
 	suite.T().Run("unfollow friend", func(t *testing.T) {
-		resp := suite.Expect.DELETE("/api/v1/user/follow").WithQuery("to_user", 6).
+		resp := suite.Expect.DELETE("/api/v1/user/follow").WithJSON(map[string]interface{}{"to_user_id": 6}).
 			WithHeader("Authorization", "Bearer "+token).Expect().Status(http.StatusOK).JSON().Object()
 		resp.Value("code").Equal(0)
 		_, err := models.GetFollow(context.Background(), 1, 6)

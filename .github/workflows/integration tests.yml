@@ -30,6 +30,7 @@ jobs:
         run: APP_ENV=test go test -coverprofile coverage.out -v ./...
         env:
           APP_ENV: test
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: comment coverage
         if: success()

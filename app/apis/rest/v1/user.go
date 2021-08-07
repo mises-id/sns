@@ -15,8 +15,7 @@ import (
 type SignInParams struct {
 	Provider  string `json:"provider"`
 	UserAuthz *struct {
-		Misesid  string `json:"misesid"`
-		AuthCode string `json:"auth_code"`
+		Auth string `json:"auth"`
 	} `json:"user_authz"`
 }
 
@@ -42,7 +41,7 @@ func SignIn(c echo.Context) error {
 	if err := c.Bind(params); err != nil {
 		return err
 	}
-	token, err := sessionSVC.SignIn(c.Request().Context(), params.UserAuthz.Misesid, params.UserAuthz.AuthCode)
+	token, err := sessionSVC.SignIn(c.Request().Context(), params.UserAuthz.Auth)
 	if err != nil {
 		return err
 	}

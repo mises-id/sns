@@ -24,3 +24,5 @@ jobs:
       - name: Build
         run: |
           CGO_ENABLED=0 go build -o main cmd/main.go
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
