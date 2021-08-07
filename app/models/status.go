@@ -24,7 +24,7 @@ type Status struct {
 	CommentsCount uint64             `bson:"comments_count,omitempty"`
 	LikesCount    uint64             `bson:"likes_count,omitempty"`
 	ForwardsCount uint64             `bson:"forwards_count,omitempty"`
-	DeletedAt     time.Time          `bson:"deleted_at,omitempty"`
+	DeletedAt     *time.Time         `bson:"deleted_at,omitempty"`
 	CreatedAt     time.Time          `bson:"created_at,omitempty"`
 	UpdatedAt     time.Time          `bson:"updated_at,omitempty"`
 	User          *User              `bson:"-"`
@@ -72,9 +72,12 @@ func CreateStatus(ctx context.Context, params *CreateStatusParams) (*Status, err
 		OriginID: params.OriginID,
 		Content:  params.Content,
 	}
-	err := json.Unmarshal(status.Meta, params.MetaData)
-	if err != nil {
-		return nil, err
+	var err error
+	if params.MetaData != nil {
+		err = json.Unmarshal(status.Meta, params.MetaData)
+		if err != nil {
+			return nil, err
+		}
 	}
 	if err = db.ODM(ctx).Create(status).Error; err != nil {
 		return nil, err

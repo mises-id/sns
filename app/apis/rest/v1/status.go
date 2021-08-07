@@ -42,6 +42,19 @@ func CreateStatus(c echo.Context) error {
 	return rest.BuildSuccessResp(c, buildStatusResp(status))
 }
 
+func DeleteStatus(c echo.Context) error {
+	id, err := primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
+		return codes.ErrInvalidArgument.New("invalid status id")
+	}
+	uid := c.Get("CurrentUser").(*models.User).UID
+	err = svc.DeleteStatus(c.Request().Context(), uid, id)
+	if err != nil {
+		return err
+	}
+	return rest.BuildSuccessResp(c, nil)
+}
+
 func buildStatusResp(status *models.Status) *StatusResp {
 	return &StatusResp{
 		ID: status.ID.String(),

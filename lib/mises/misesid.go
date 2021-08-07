@@ -35,6 +35,6 @@ func (c *ClientImpl) Auth(auth string) (string, error) {
 
 func New() Client {
 	return &ClientImpl{
-		client: sdk.NewSdkForUser(sdk.MSdkOption{}, ""),
+		client: sdk.NewSdkForApp(sdk.MSdkOption{}),
 	}
 }

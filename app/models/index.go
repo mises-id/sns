@@ -54,17 +54,10 @@ func EnsureIndex() {
 
 	_, err = db.DB().Collection("statuses").Indexes().CreateMany(context.Background(), []mongo.IndexModel{
 		{
-			Keys: bson.M{"to_uid": 1},
+			Keys: bson.M{"uid": 1},
 		},
 		{
-			Keys: bsonx.Doc{{
-				Key: "from_uid", Value: bsonx.Int32(1),
-			}, {
-				Key: "to_uid", Value: bsonx.Int32(1)},
-			},
-			Options: &options.IndexOptions{
-				Unique: &trueBool,
-			},
+			Keys: bson.M{"deleted_at": 1},
 		},
 	}, opts)
 	if err != nil {

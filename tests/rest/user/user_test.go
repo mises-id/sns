@@ -1,6 +1,7 @@
 package user
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"testing"
@@ -8,9 +9,12 @@ import (
 
 	"github.com/mises-id/sns/app/models"
 	"github.com/mises-id/sns/app/models/enum"
+	"github.com/mises-id/sns/lib/codes"
+	"github.com/mises-id/sns/lib/db"
 	"github.com/mises-id/sns/tests/factories"
 	"github.com/mises-id/sns/tests/rest"
 	"github.com/stretchr/testify/suite"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 type UserServerSuite struct {
@@ -136,6 +140,18 @@ func (suite *UserServerSuite) TestUpdateUser() {
 			},
 		}).WithHeader("Authorization", "Bearer "+token).Expect().Status(http.StatusOK).JSON().Object()
 		resp.Value("code").Equal(0)
+		u := &models.User{}
+		err := db.ODM(context.Background()).First(u, bson.M{"_id": 1001}).Error
+		suite.Nil(err)
+		suite.Equal("Hahaha", u.Username)
+
+		resp = suite.Expect.PATCH("/api/v1/user/me").WithJSON(map[string]interface{}{
+			"by": "username",
+			"username": map[string]interface{}{
+				"username": "Hello",
+			},
+		}).WithHeader("Authorization", "Bearer "+token).Expect().Status(http.StatusForbidden).JSON().Object()
+		resp.Value("code").Equal(codes.UsernameExsistedCode)
 	})
 	suite.T().Run("update user avatar success", func(t *testing.T) {
 		resp := suite.Expect.PATCH("/api/v1/user/me").WithJSON(map[string]interface{}{
@@ -145,6 +161,10 @@ func (suite *UserServerSuite) TestUpdateUser() {
 			},
 		}).WithHeader("Authorization", "Bearer "+token).Expect().Status(http.StatusOK).JSON().Object()
 		resp.Value("code").Equal(0)
+		u := &models.User{}
+		err := db.ODM(context.Background()).First(u, bson.M{"_id": 1001}).Error
+		suite.Nil(err)
+		suite.Equal(uint64(1), u.AvatarID)
 	})
 	suite.T().Run("update user profile success", func(t *testing.T) {
 		resp := suite.Expect.PATCH("/api/v1/user/me").WithJSON(map[string]interface{}{
@@ -157,5 +177,17 @@ func (suite *UserServerSuite) TestUpdateUser() {
 			},
 		}).WithHeader("Authorization", "Bearer "+token).Expect().Status(http.StatusOK).JSON().Object()
 		resp.Value("code").Equal(0)
+		u := &models.User{}
+		err := db.ODM(context.Background()).First(u, bson.M{"_id": 1001}).Error
+		suite.Nil(err)
+		suite.Equal("test@t.com", u.Email)
+		suite.Equal(enum.GenderFemale, u.Gender)
+		suite.Equal("123456", u.Mobile)
+		suite.Equal("xxxx", u.Address)
+
+		resp = suite.Expect.GET("/api/v1/user/me").WithHeader("Authorization", "Bearer "+token).Expect().Status(http.StatusOK).JSON().Object()
+		resp.Value("data").Object().Value("email").Equal("test@t.com")
+		resp.Value("data").Object().Value("mobile").Equal("123456")
+		resp.Value("data").Object().Value("address").Equal("xxxx")
 	})
 }

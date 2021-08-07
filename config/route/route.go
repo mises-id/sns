@@ -24,4 +24,6 @@ func SetRoutes(e *echo.Echo) {
 	userGroup.PATCH("/user/me", v1.UpdateUser)
 	userGroup.POST("/user/follow", v1.Follow)
 	userGroup.DELETE("/user/follow", v1.Unfollow)
+	userGroup.POST("/status", v1.CreateStatus)
+	userGroup.DELETE("/status/:id", v1.DeleteStatus)
 }

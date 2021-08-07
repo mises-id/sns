@@ -73,7 +73,7 @@ func DeleteStatus(ctx context.Context, uid uint64, id primitive.ObjectID) error 
 		return err
 	}
 	if status.UID != uid {
-		return codes.ErrNotFound
+		return codes.ErrForbidden
 	}
 	return models.DeleteStatus(ctx, id)
 }
