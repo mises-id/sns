@@ -23,7 +23,7 @@ func init() {
 func SignIn(ctx context.Context, auth string) (string, error) {
 	misesid, err := misesClient.Auth(auth)
 	if err != nil {
-		return "", err
+		return "", codes.ErrAuthorizeFailed.New(err.Error())
 	}
 	user, err := models.FindOrCreateUserByMisesid(ctx, misesid)
 	if err != nil {
