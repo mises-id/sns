@@ -9,6 +9,7 @@ import (
 	"github.com/mises-id/sns/config/env"
 	"github.com/mises-id/sns/lib/codes"
 	"github.com/mises-id/sns/lib/mises"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -23,7 +24,8 @@ func init() {
 func SignIn(ctx context.Context, auth string) (string, error) {
 	misesid, err := misesClient.Auth(auth)
 	if err != nil {
-		return "", err
+		logrus.Errorf("mises verify error: %v", err)
+		return "", codes.ErrAuthorizeFailed
 	}
 	user, err := models.FindOrCreateUserByMisesid(ctx, misesid)
 	if err != nil {
