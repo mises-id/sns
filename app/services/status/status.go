@@ -23,9 +23,18 @@ type CreateStatusParams struct {
 
 type ListStatusParams struct {
 	*pagination.PageQuickParams
-	UID      uint64
-	ParentID primitive.ObjectID
-	FromType string
+	CurrentUID uint64
+	UID        uint64
+	ParentID   primitive.ObjectID
+	FromType   string
+}
+
+func GetStatus(ctx context.Context, currentUID uint64, id primitive.ObjectID) (*models.Status, error) {
+	status, err := models.FindStatus(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return status, batchSetIsLiked(ctx, currentUID, status)
 }
 
 func ListStatus(ctx context.Context, params *ListStatusParams) ([]*models.Status, pagination.Pagination, error) {
@@ -37,20 +46,37 @@ func ListStatus(ctx context.Context, params *ListStatusParams) ([]*models.Status
 		}
 		fromType = &enum.FromTypeFilter{FromType: tp}
 	}
-	return models.ListStatus(ctx, []uint64{params.UID}, params.ParentID, fromType, params.PageQuickParams)
+	statues, page, err := models.ListStatus(ctx, []uint64{params.UID}, params.ParentID, fromType, params.PageQuickParams)
+	if err != nil {
+		return nil, nil, err
+	}
+	return statues, page, batchSetIsLiked(ctx, params.CurrentUID, statues...)
 }
 
 func UserTimeline(ctx context.Context, uid uint64, pageParams *pagination.PageQuickParams) ([]*models.Status, pagination.Pagination, error) {
 	friendIDs, err := models.ListFollowingUserIDs(ctx, uid)
 	if err != nil {
-
+		return nil, nil, err
 	}
-	return models.ListStatus(ctx, friendIDs, primitive.NilObjectID, nil, pageParams)
+	if len(friendIDs) == 0 {
+		return []*models.Status{}, &pagination.QuickPagination{
+			Limit: pageParams.Limit,
+		}, nil
+	}
+
+	statues, page, err := models.ListStatus(ctx, friendIDs, primitive.NilObjectID, nil, pageParams)
+	if err != nil {
+		return nil, nil, err
+	}
+	return statues, page, batchSetIsLiked(ctx, uid, statues...)
 }
 
 func RecommendStatus(ctx context.Context, uid uint64, pageParams *pagination.PageQuickParams) ([]*models.Status, pagination.Pagination, error) {
-	// check user exsist
-	return models.ListStatus(ctx, nil, primitive.NilObjectID, nil, pageParams)
+	statues, page, err := models.ListStatus(ctx, nil, primitive.NilObjectID, nil, pageParams)
+	if err != nil {
+		return nil, nil, err
+	}
+	return statues, page, batchSetIsLiked(ctx, uid, statues...)
 }
 
 func CreateStatus(ctx context.Context, uid uint64, params *CreateStatusParams) (*models.Status, error) {
@@ -115,4 +141,22 @@ func DeleteStatus(ctx context.Context, uid uint64, id primitive.ObjectID) error 
 		return codes.ErrForbidden
 	}
 	return models.DeleteStatus(ctx, id)
+}
+
+func batchSetIsLiked(ctx context.Context, uid uint64, statuses ...*models.Status) error {
+	if uid == 0 {
+		return nil
+	}
+	statusIDs := make([]primitive.ObjectID, len(statuses))
+	for i, status := range statuses {
+		statusIDs[i] = status.ID
+	}
+	likeMap, err := models.GetStatusLikeMap(ctx, uid, statusIDs)
+	if err != nil {
+		return err
+	}
+	for _, status := range statuses {
+		status.IsLiked = likeMap[status.ID] != nil
+	}
+	return nil
 }

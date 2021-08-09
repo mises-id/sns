@@ -14,7 +14,7 @@ import (
 )
 
 type ListFriendshipParams struct {
-	pagination.TraditionalParams
+	pagination.QuickPagination
 	RelationType string `query:"relation_type"`
 }
 
@@ -42,7 +42,7 @@ func ListFriendship(c echo.Context) error {
 	if err != nil {
 		relationType = enum.Fan
 	}
-	follows, page, err := followSVC.ListFriendship(c.Request().Context(), uid, relationType, &params.TraditionalParams)
+	follows, page, err := followSVC.ListFriendship(c.Request().Context(), uid, relationType, &params.QuickPagination)
 	if err != nil {
 		return err
 	}

@@ -29,7 +29,7 @@ func (a *Follow) BeforeCreate(ctx context.Context) error {
 	return nil
 }
 
-func ListFollow(ctx context.Context, uid uint64, relationType enum.RelationType, pageParams *pagination.TraditionalParams) ([]*Follow, pagination.Pagination, error) {
+func ListFollow(ctx context.Context, uid uint64, relationType enum.RelationType, pageParams *pagination.QuickPagination) ([]*Follow, pagination.Pagination, error) {
 	follows := make([]*Follow, 0)
 	chain := db.ODM(ctx)
 	if relationType == enum.Fan {
@@ -39,7 +39,7 @@ func ListFollow(ctx context.Context, uid uint64, relationType enum.RelationType,
 	} else {
 		chain = chain.Where(bson.M{"from_uid": uid, "is_friend": true})
 	}
-	paginator := pagination.NewTraditionalPaginator(pageParams.PageNum, pageParams.PageSize, chain)
+	paginator := pagination.NewQuickPaginator(pageParams.Limit, pageParams.NextID, chain)
 	page, err := paginator.Paginate(&follows)
 	if err != nil {
 		return nil, nil, err

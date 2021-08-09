@@ -139,3 +139,25 @@ func createMisesUser(ctx context.Context, misesid string) (*User, error) {
 	_, err = db.DB().Collection("users").InsertOne(ctx, user)
 	return user, err
 }
+
+func PreloadUserAvatar(ctx context.Context, users ...*User) error {
+	avatarIds := make([]uint64, 0)
+	for _, user := range users {
+		if user.AvatarID != 0 {
+			avatarIds = append(avatarIds, user.AvatarID)
+		}
+	}
+	attachments := make([]*Attachment, 0)
+	err := db.ODM(ctx).Where(bson.M{"_id": bson.M{"$in": avatarIds}}).Find(&attachments).Error
+	if err != nil {
+		return err
+	}
+	avatarMap := make(map[uint64]*Attachment)
+	for _, attachment := range attachments {
+		avatarMap[attachment.ID] = attachment
+	}
+	for _, user := range users {
+		user.Avatar = avatarMap[user.AvatarID]
+	}
+	return nil
+}

@@ -1,15 +1,14 @@
 package pagination
 
 import (
-	"encoding/base64"
-
 	"github.com/mises-id/sns/lib/db/odm"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type PageQuickParams struct {
 	Limit  int64  `json:"limit" query:"limit"`
-	NextID string `json:"next_id" query:"next_id"`
+	NextID string `json:"last_id" query:"last_id"`
 }
 
 func DefaultQuickParams() *PageQuickParams {
@@ -29,7 +28,7 @@ func (p *PageQuickParams) GetLimit() int64 {
 
 type QuickPagination struct {
 	Limit  int64  `json:"limit" query:"limit"`
-	NextID string `json:"next_id" query:"next_id"`
+	NextID string `json:"last_id" query:"last_id"`
 }
 
 type QuickPaginator struct {
@@ -58,7 +57,11 @@ func (p *QuickPaginator) Paginate(dataSource interface{}) (Pagination, error) {
 	db := p.DB
 	var err error
 	if p.NextID != "" {
-		db = db.Where(bson.M{"_id": bson.M{"$lte": p.NextID}})
+		hex, err := primitive.ObjectIDFromHex(p.NextID)
+		if err != nil {
+			return nil, err
+		}
+		db = db.Where(bson.M{"_id": bson.M{"$lte": hex}})
 	}
 	err = db.Sort(bson.M{"_id": -1}).Limit(p.Limit).Find(dataSource).Error
 	if err != nil {
@@ -69,13 +72,13 @@ func (p *QuickPaginator) Paginate(dataSource interface{}) (Pagination, error) {
 	if err = db.Skip(p.Limit).Limit(1).Find(&items).Error; err != nil {
 		return nil, err
 	}
-	pageToken := ""
+	nextID := ""
 	if len(items) > 0 {
-		pageToken = base64.StdEncoding.EncodeToString([]byte(items[0].ID))
+		nextID = items[0].ID
 	}
 	return &QuickPagination{
 		Limit:  p.Limit,
-		NextID: pageToken,
+		NextID: nextID,
 	}, nil
 }
 
