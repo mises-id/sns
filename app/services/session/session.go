@@ -2,6 +2,7 @@ package session
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -22,8 +23,12 @@ func init() {
 }
 
 func SignIn(ctx context.Context, auth string) (string, error) {
-	if env.Envs.Debug {
-		return auth, nil
+	// just for staging environment
+	if env.Envs.DebugMisesPrefix != "" {
+		arr := strings.Split(auth, ":")
+		if len(arr) > 1 {
+			return arr[1], nil
+		}
 	}
 	misesid, err := misesClient.Auth(auth)
 	if err != nil {
