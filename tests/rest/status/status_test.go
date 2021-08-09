@@ -53,6 +53,12 @@ func TestStatusServer(t *testing.T) {
 }
 
 func (suite *StatusServerSuite) TestListStatus() {
+	token := suite.MockLoginUser("1001:123")
+	suite.T().Run("list me status", func(t *testing.T) {
+		resp := suite.Expect.GET("/api/v1/status/recommend").
+			WithHeader("Authorization", "Bearer "+token).Expect().Status(http.StatusOK).JSON().Object()
+		resp.Value("data").Array()
+	})
 }
 
 func (suite *StatusServerSuite) TestCreateStatus() {

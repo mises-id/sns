@@ -149,6 +149,9 @@ func DeleteStatus(ctx context.Context, id primitive.ObjectID) error {
 }
 
 func ListStatus(ctx context.Context, uids []uint64, parentStatusID primitive.ObjectID, fromTypeFilter *enum.FromTypeFilter, pageParams *pagination.PageQuickParams) ([]*Status, pagination.Pagination, error) {
+	if pageParams == nil {
+		pageParams = pagination.DefaultQuickParams()
+	}
 	statuses := make([]*Status, 0)
 	chain := db.ODM(ctx)
 	if uids != nil && len(uids) > 0 {
@@ -174,10 +177,13 @@ func ListStatus(ctx context.Context, uids []uint64, parentStatusID primitive.Obj
 	return statuses, page, preloadStatusUser(ctx, statuses...)
 }
 
-func ListCommentStatus(ctx context.Context, statusID primitive.ObjectID, pageParams *pagination.TraditionalParams) ([]*Status, pagination.Pagination, error) {
+func ListCommentStatus(ctx context.Context, statusID primitive.ObjectID, pageParams *pagination.PageQuickParams) ([]*Status, pagination.Pagination, error) {
+	if pageParams == nil {
+		pageParams = pagination.DefaultQuickParams()
+	}
 	statuses := make([]*Status, 0)
 	chain := db.ODM(ctx).Where(bson.M{"parent_id": statusID, "from_type": enum.FromComment})
-	paginator := pagination.NewTraditionalPaginator(pageParams.PageNum, pageParams.PageSize, chain)
+	paginator := pagination.NewQuickPaginator(pageParams.Limit, pageParams.NextID, chain)
 	page, err := paginator.Paginate(&statuses)
 	if err != nil {
 		return nil, nil, err
