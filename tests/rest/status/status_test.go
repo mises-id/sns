@@ -53,6 +53,28 @@ func TestStatusServer(t *testing.T) {
 }
 
 func (suite *StatusServerSuite) TestListStatus() {
+	token := suite.MockLoginUser("1001:123")
+	suite.T().Run("recommend status for guest", func(t *testing.T) {
+		resp := suite.Expect.GET("/api/v1/status/recommend").Expect().Status(http.StatusOK).JSON().Object()
+		resp.Value("data").Array()
+	})
+
+	suite.T().Run("recommend status for user", func(t *testing.T) {
+		resp := suite.Expect.GET("/api/v1/status/recommend").
+			WithHeader("Authorization", "Bearer "+token).Expect().Status(http.StatusOK).JSON().Object()
+		resp.Value("data").Array()
+	})
+
+	suite.T().Run("list user status", func(t *testing.T) {
+		resp := suite.Expect.GET("/api/v1/user/1001/status").Expect().Status(http.StatusOK).JSON().Object()
+		resp.Value("data").Array()
+	})
+
+	suite.T().Run("user timeline", func(t *testing.T) {
+		resp := suite.Expect.GET("/api/v1/timeline/me").
+			WithHeader("Authorization", "Bearer "+token).Expect().Status(http.StatusOK).JSON().Object()
+		resp.Value("data").Array()
+	})
 }
 
 func (suite *StatusServerSuite) TestCreateStatus() {

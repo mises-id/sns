@@ -25,7 +25,7 @@ func SetRoutes(e *echo.Echo) {
 	userGroup.POST("/user/follow", v1.Follow)
 	userGroup.DELETE("/user/follow", v1.Unfollow)
 	groupV1.GET("/user/:uid/status", v1.ListUserStatus)
-	userGroup.GET("/status/recommend", v1.RecommendStatus)
+	groupV1.GET("/status/recommend", v1.RecommendStatus)
 	userGroup.GET("/timeline/me", v1.Timeline)
 	userGroup.POST("/status", v1.CreateStatus)
 	userGroup.DELETE("/status/:id", v1.DeleteStatus)

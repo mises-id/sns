@@ -87,7 +87,12 @@ func Timeline(c echo.Context) error {
 }
 
 func RecommendStatus(c echo.Context) error {
-	uid := c.Get("CurrentUser").(*models.User).UID
+	iuser := c.Get("CurrentUser")
+	var uid uint64
+	if iuser != nil {
+		uid = iuser.(*models.User).UID
+	}
+
 	params := &ListUserStatusParams{}
 	if err := c.Bind(params); err != nil {
 		return codes.ErrInvalidArgument.New("invalid query params")

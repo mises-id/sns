@@ -50,10 +50,6 @@ func UserTimeline(ctx context.Context, uid uint64, pageParams *pagination.PageQu
 
 func RecommendStatus(ctx context.Context, uid uint64, pageParams *pagination.PageQuickParams) ([]*models.Status, pagination.Pagination, error) {
 	// check user exsist
-	_, err := models.FindUser(ctx, uid)
-	if err != nil {
-		return nil, nil, err
-	}
 	return models.ListStatus(ctx, nil, primitive.NilObjectID, nil, pageParams)
 }
 

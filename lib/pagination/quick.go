@@ -12,6 +12,12 @@ type PageQuickParams struct {
 	NextID string `json:"next_id" query:"next_id"`
 }
 
+func DefaultQuickParams() *PageQuickParams {
+	return &PageQuickParams{
+		Limit: 50,
+	}
+}
+
 func (*PageQuickParams) isPagePrams() {}
 
 func (p *PageQuickParams) GetLimit() int64 {
