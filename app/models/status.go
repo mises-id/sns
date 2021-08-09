@@ -18,6 +18,7 @@ type Status struct {
 	ParentID      primitive.ObjectID `bson:"parent_id,omitempty"`
 	OriginID      primitive.ObjectID `bson:"origin_id,omitempty"`
 	UID           uint64             `bson:"uid,omitempty"`
+	FromType      enum.FromType      `bson:"from_type,omitempty"`
 	StatusType    enum.StatusType    `bson:"status_type,omitempty"`
 	Meta          json.RawMessage    `bson:"meta,omitempty"`
 	Content       string             `bson:"content,omitempty"`
@@ -36,7 +37,51 @@ func (*Status) CollectionName() string {
 	return "statuses"
 }
 
+func (s *Status) BeforeCreate(ctx context.Context) error {
+	s.CreatedAt = time.Now()
+	s.UpdatedAt = time.Now()
+	var err error
+	if !s.ParentID.IsZero() {
+		s.ParentStatus, err = FindStatus(ctx, s.ParentID)
+		if err != nil {
+			return err
+		}
+		s.OriginID = s.ParentStatus.OriginID
+		if s.OriginID.IsZero() {
+			s.OriginID = s.ParentID
+		}
+	}
+	if !s.OriginID.IsZero() {
+		s.OriginStatus, err = FindStatus(ctx, s.OriginID)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *Status) AfterCreate(ctx context.Context) error {
+	var err error
+	counterKey := s.FromType.CounterKey()
+	if s.OriginStatus != nil {
+		err = s.OriginStatus.IncStatusCounter(ctx, counterKey)
+		if err != nil {
+			return err
+		}
+	}
+	if s.ParentStatus != nil && s.ParentID != s.OriginID {
+		err = s.ParentStatus.IncStatusCounter(ctx, counterKey)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (s *Status) IncStatusCounter(ctx context.Context, counterKey string) error {
+	if counterKey == "" {
+		return nil
+	}
 	return db.DB().Collection("statuses").FindOneAndUpdate(ctx, bson.M{"_id": s.ID},
 		bson.D{{
 			Key: "$inc",
@@ -59,30 +104,40 @@ func FindStatus(ctx context.Context, id primitive.ObjectID) (*Status, error) {
 type CreateStatusParams struct {
 	UID        uint64
 	ParentID   primitive.ObjectID
-	OriginID   primitive.ObjectID
 	StatusType enum.StatusType
+	FromType   enum.FromType
 	Content    string
 	MetaData   meta.MetaData
 }
 
 func CreateStatus(ctx context.Context, params *CreateStatusParams) (*Status, error) {
 	status := &Status{
-		UID:      params.UID,
-		ParentID: params.ParentID,
-		OriginID: params.OriginID,
-		Content:  params.Content,
+		UID:        params.UID,
+		StatusType: params.StatusType,
+		FromType:   params.FromType,
+		ParentID:   params.ParentID,
+		Content:    params.Content,
 	}
 	var err error
 	if params.MetaData != nil {
-		err = json.Unmarshal(status.Meta, params.MetaData)
+		status.Meta, err = json.Marshal(params.MetaData)
 		if err != nil {
 			return nil, err
 		}
 	}
+	if err = status.BeforeCreate(ctx); err != nil {
+		return nil, err
+	}
 	if err = db.ODM(ctx).Create(status).Error; err != nil {
 		return nil, err
 	}
+	if err = status.AfterCreate(ctx); err != nil {
+		return nil, err
+	}
 	if err = preloadRelatedStatus(ctx, status); err != nil {
+		return nil, err
+	}
+	if err = preloadAttachment(ctx, status); err != nil {
 		return nil, err
 	}
 	return status, preloadStatusUser(ctx, status)
@@ -93,15 +148,44 @@ func DeleteStatus(ctx context.Context, id primitive.ObjectID) error {
 	return err
 }
 
-func ListUserStatus(ctx context.Context, uid uint64, pageParams *pagination.PageQuickParams) ([]*Status, pagination.Pagination, error) {
+func ListStatus(ctx context.Context, uids []uint64, parentStatusID primitive.ObjectID, fromTypeFilter *enum.FromTypeFilter, pageParams *pagination.PageQuickParams) ([]*Status, pagination.Pagination, error) {
 	statuses := make([]*Status, 0)
-	chain := db.ODM(ctx).Where(bson.M{"uid": uid})
+	chain := db.ODM(ctx)
+	if uids != nil && len(uids) > 0 {
+		chain = chain.Where(bson.M{"$in": bson.M{"uid": uids}})
+	}
+	if !parentStatusID.IsZero() {
+		chain = chain.Where(bson.M{"parent_id": parentStatusID})
+	}
+	if fromTypeFilter != nil {
+		chain = chain.Where(bson.M{"from_type": fromTypeFilter.FromType})
+	}
 	paginator := pagination.NewQuickPaginator(pageParams.Limit, pageParams.NextID, chain)
 	page, err := paginator.Paginate(&statuses)
 	if err != nil {
 		return nil, nil, err
 	}
 	if err = preloadRelatedStatus(ctx, statuses...); err != nil {
+		return nil, nil, err
+	}
+	if err = preloadAttachment(ctx, statuses...); err != nil {
+		return nil, nil, err
+	}
+	return statuses, page, preloadStatusUser(ctx, statuses...)
+}
+
+func ListCommentStatus(ctx context.Context, statusID primitive.ObjectID, pageParams *pagination.TraditionalParams) ([]*Status, pagination.Pagination, error) {
+	statuses := make([]*Status, 0)
+	chain := db.ODM(ctx).Where(bson.M{"parent_id": statusID, "from_type": enum.FromComment})
+	paginator := pagination.NewTraditionalPaginator(pageParams.PageNum, pageParams.PageSize, chain)
+	page, err := paginator.Paginate(&statuses)
+	if err != nil {
+		return nil, nil, err
+	}
+	if err = preloadRelatedStatus(ctx, statuses...); err != nil {
+		return nil, nil, err
+	}
+	if err = preloadAttachment(ctx, statuses...); err != nil {
 		return nil, nil, err
 	}
 	return statuses, page, preloadStatusUser(ctx, statuses...)
@@ -142,6 +226,9 @@ func preloadRelatedStatus(ctx context.Context, statuses ...*Status) error {
 	if err != nil {
 		return err
 	}
+	if err = preloadStatusUser(ctx, relatedStatuses...); err != nil {
+		return err
+	}
 	statusMap := make(map[primitive.ObjectID]*Status)
 	for _, status := range relatedStatuses {
 		statusMap[status.ID] = status
@@ -149,6 +236,38 @@ func preloadRelatedStatus(ctx context.Context, statuses ...*Status) error {
 	for _, status := range statuses {
 		status.ParentStatus = statusMap[status.ParentID]
 		status.OriginStatus = statusMap[status.OriginID]
+	}
+	return nil
+}
+
+func preloadAttachment(ctx context.Context, statuses ...*Status) error {
+	attachmentIDs := make([]uint64, 0)
+	linkMetas := make([]*meta.LinkMeta, 0)
+	for _, status := range statuses {
+		if status.StatusType != enum.LinkStatus {
+			continue
+		}
+		metaData, err := status.GetMetaData()
+		if err != nil {
+			return err
+		}
+		linkMeta := metaData.(*meta.LinkMeta)
+		attachmentIDs = append(attachmentIDs, linkMeta.AttachmentID)
+		linkMetas = append(linkMetas, linkMeta)
+	}
+	attachments := make([]*Status, 0)
+	err := db.ODM(ctx).Where(bson.M{"_id": bson.M{"$in": attachmentIDs}}).Find(&attachments).Error
+	if err != nil {
+		return err
+	}
+	attachmentMap := make(map[uint64]*Attachment)
+	for _, attachment := range attachmentMap {
+		attachmentMap[attachment.ID] = attachment
+	}
+	for _, linkMeta := range linkMetas {
+		if attachmentMap[linkMeta.AttachmentID] != nil {
+			linkMeta.AttachmentURL = attachmentMap[linkMeta.AttachmentID].FileUrl()
+		}
 	}
 	return nil
 }

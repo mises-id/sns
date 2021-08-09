@@ -3,9 +3,13 @@ package models
 import (
 	"context"
 	"testing"
+
+	"github.com/mises-id/sns/lib/db"
 )
 
 func TestCreateStatus(t *testing.T) {
+	db.SetupMongo(context.TODO())
+	defer db.DB().Collection("statuses").Drop(context.TODO())
 	status, err := CreateStatus(context.TODO(), &CreateStatusParams{
 		UID:     uint64(1),
 		Content: "test status",

@@ -56,7 +56,7 @@ func MyProfile(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	return rest.BuildSuccessResp(c, buildUser(user))
+	return rest.BuildSuccessResp(c, buildUserResp(user))
 }
 
 func FindUser(c echo.Context) error {
@@ -69,7 +69,7 @@ func FindUser(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	return rest.BuildSuccessResp(c, buildUser(user))
+	return rest.BuildSuccessResp(c, buildUserResp(user))
 }
 
 type UserProfileParams struct {
@@ -124,10 +124,10 @@ func UpdateUser(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	return rest.BuildSuccessResp(c, buildUser(user))
+	return rest.BuildSuccessResp(c, buildUserResp(user))
 }
 
-func buildUser(user *models.User) *UserResp {
+func buildUserResp(user *models.User) *UserResp {
 	resp := &UserResp{
 		UID:      user.UID,
 		Username: user.Username,
