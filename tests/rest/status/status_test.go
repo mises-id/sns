@@ -46,7 +46,7 @@ func (suite *StatusServerSuite) SetupTest() {
 }
 
 func (suite *StatusServerSuite) TearDownTest() {
-	// suite.Clean(suite.collections...)
+	suite.Clean(suite.collections...)
 }
 
 func TestStatusServer(t *testing.T) {
@@ -58,6 +58,13 @@ func (suite *StatusServerSuite) TestListStatus() {
 	suite.T().Run("recommend status for guest", func(t *testing.T) {
 		resp := suite.Expect.GET("/api/v1/status/recommend").Expect().Status(http.StatusOK).JSON().Object()
 		resp.Value("data").Array()
+	})
+
+	suite.T().Run("recommend status pagination", func(t *testing.T) {
+		resp := suite.Expect.GET("/api/v1/status/recommend").WithQuery("limit", 3).Expect().Status(http.StatusOK).JSON().Object()
+		resp.Value("data").Array()
+		resp.Value("pagination").Object().Value("limit").Equal(3)
+		resp.Value("pagination").Object().Value("last_id").Equal(suite.statuses[4].ID.Hex())
 	})
 
 	suite.T().Run("recommend status for user", func(t *testing.T) {

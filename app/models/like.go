@@ -46,3 +46,16 @@ func FindLike(ctx context.Context, uid uint64, targetID primitive.ObjectID, targ
 	}).First(like).Error
 	return like, err
 }
+
+func GetStatusLikeMap(ctx context.Context, uid uint64, statusIDs []primitive.ObjectID) (map[primitive.ObjectID]*Like, error) {
+	likes := make([]*Like, 0)
+	err := db.ODM(ctx).Where(bson.M{"target_id": bson.M{"$in": statusIDs}, "target_type": enum.LikeStatus}).Find(&likes).Error
+	if err != nil {
+		return nil, err
+	}
+	likeMap := make(map[primitive.ObjectID]*Like)
+	for _, like := range likes {
+		likeMap[like.TargetID] = like
+	}
+	return likeMap, nil
+}
