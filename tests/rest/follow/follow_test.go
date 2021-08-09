@@ -79,7 +79,7 @@ func (suite *FollowServerSuite) TestListFriendship() {
 		resp.Value("data").Array().First().Object().Value("user").Object().Value("uid").Equal(13)
 		resp.Value("data").Array().Last().Object().Value("user").Object().Value("uid").Equal(6)
 		resp.Value("data").Array().Last().Object().Value("relation_type").Equal("fan")
-		resp.Value("pagination").Object().Value("total_records").Equal(8)
+		resp.Value("pagination").Object().Value("last_id").Equal("")
 	})
 
 	suite.T().Run("list folloing", func(t *testing.T) {
@@ -103,13 +103,12 @@ func (suite *FollowServerSuite) TestListFriendship() {
 
 	suite.T().Run("list page", func(t *testing.T) {
 		resp := suite.Expect.GET("/api/v1/user/1/friendship").WithQuery("relation_type", "fans").
-			WithQuery("page_size", "3").
-			WithQuery("page_num", "2").
+			WithQuery("limit", "3").
 			Expect().Status(http.StatusOK).JSON().Object()
 		resp.Value("code").Equal(0)
 		resp.Value("data").Array().Length().Equal(3)
-		resp.Value("pagination").Object().Value("total_records").Equal(8)
-		resp.Value("pagination").Object().Value("total_pages").Equal(3)
+		resp.Value("pagination").Object().Value("limit").Equal(3)
+		resp.Value("pagination").Object().Value("last_id").NotEqual("")
 	})
 
 	token := suite.MockLoginUser(user1.Misesid + ":123")

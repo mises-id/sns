@@ -43,7 +43,12 @@ func ListStatus(ctx context.Context, params *ListStatusParams) ([]*models.Status
 func UserTimeline(ctx context.Context, uid uint64, pageParams *pagination.PageQuickParams) ([]*models.Status, pagination.Pagination, error) {
 	friendIDs, err := models.ListFollowingUserIDs(ctx, uid)
 	if err != nil {
-
+		return nil, nil, err
+	}
+	if len(friendIDs) == 0 {
+		return []*models.Status{}, &pagination.QuickPagination{
+			Limit: pageParams.Limit,
+		}, nil
 	}
 	return models.ListStatus(ctx, friendIDs, primitive.NilObjectID, nil, pageParams)
 }
