@@ -22,9 +22,6 @@ func init() {
 }
 
 func SignIn(ctx context.Context, auth string) (string, error) {
-	if env.Envs.Debug {
-		return auth, nil
-	}
 	misesid, err := misesClient.Auth(auth)
 	if err != nil {
 		logrus.Errorf("mises verify error: %v", err)
