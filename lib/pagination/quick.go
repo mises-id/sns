@@ -9,7 +9,7 @@ import (
 
 type PageQuickParams struct {
 	Limit  int64  `json:"limit" query:"limit"`
-	NextID string `json:"next_id" query:"next_id"`
+	NextID string `json:"last_id" query:"last_id"`
 }
 
 func DefaultQuickParams() *PageQuickParams {
@@ -29,7 +29,7 @@ func (p *PageQuickParams) GetLimit() int64 {
 
 type QuickPagination struct {
 	Limit  int64  `json:"limit" query:"limit"`
-	NextID string `json:"next_id" query:"next_id"`
+	NextID string `json:"last_id" query:"last_id"`
 }
 
 type QuickPaginator struct {

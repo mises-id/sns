@@ -17,7 +17,7 @@ import (
 )
 
 type ListUserStatusParams struct {
-	*pagination.PageQuickParams
+	pagination.PageQuickParams
 }
 
 type CreateStatusParams struct {
@@ -50,6 +50,18 @@ type StatusResp struct {
 	CreatedAt     time.Time   `json:"created_at"`
 }
 
+func GetStatus(c echo.Context) error {
+	id, err := primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
+		return codes.ErrInvalidArgument.New("invalid status id")
+	}
+	status, err := svc.GetStatus(c.Request().Context(), id)
+	if err != nil {
+		return err
+	}
+	return rest.BuildSuccessResp(c, buildStatusResp(status))
+}
+
 // list user status
 func ListUserStatus(c echo.Context) error {
 	uidParam := c.Param("uid")
@@ -62,7 +74,7 @@ func ListUserStatus(c echo.Context) error {
 		return codes.ErrInvalidArgument.New("invalid query params")
 	}
 	statuses, page, err := svc.ListStatus(c.Request().Context(), &svc.ListStatusParams{
-		PageQuickParams: params.PageQuickParams,
+		PageQuickParams: &params.PageQuickParams,
 		UID:             uid,
 	})
 	if err != nil {
@@ -78,7 +90,7 @@ func Timeline(c echo.Context) error {
 	if err := c.Bind(params); err != nil {
 		return codes.ErrInvalidArgument.New("invalid query params")
 	}
-	statuses, page, err := svc.UserTimeline(c.Request().Context(), uid, params.PageQuickParams)
+	statuses, page, err := svc.UserTimeline(c.Request().Context(), uid, &params.PageQuickParams)
 	if err != nil {
 		return err
 	}
@@ -97,7 +109,7 @@ func RecommendStatus(c echo.Context) error {
 	if err := c.Bind(params); err != nil {
 		return codes.ErrInvalidArgument.New("invalid query params")
 	}
-	statuses, page, err := svc.RecommendStatus(c.Request().Context(), uid, params.PageQuickParams)
+	statuses, page, err := svc.RecommendStatus(c.Request().Context(), uid, &params.PageQuickParams)
 	if err != nil {
 		return err
 	}
