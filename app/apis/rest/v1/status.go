@@ -180,7 +180,7 @@ func buildStatusResp(status *models.Status) *StatusResp {
 		return nil
 	}
 	resp := &StatusResp{
-		ID:            status.ID.String(),
+		ID:            status.ID.Hex(),
 		User:          buildUserResp(status.User),
 		Content:       status.Content,
 		FromType:      status.FromType.String(),

@@ -27,7 +27,7 @@ type Env struct {
 	JWTSecret         string        `env:"JWT_SECRET,required"`
 	TokenDuration     time.Duration `env:"TOKEN_DURATION" envDefault:"24h"`
 	AllowOrigins      string        `env:"ALLOW_ORIGINS" envDefault:""`
-	Debug             bool          `env:"DEBUG" envDefault:"false"`
+	DebugMisesPrefix  string        `env:"DEBUG_MISES_PREFIX" envDefault:""`
 	RootPath          string
 }
 
