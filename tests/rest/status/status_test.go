@@ -2,6 +2,7 @@ package status
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -24,7 +25,7 @@ type StatusServerSuite struct {
 
 func (suite *StatusServerSuite) SetupSuite() {
 	suite.RestBaseTestSuite.SetupSuite()
-	suite.collections = []string{"counters", "users", "follows", "statuses"}
+	suite.collections = []string{"counters", "users", "follows", "statuses", "likes"}
 }
 
 func (suite *StatusServerSuite) TearDownSuite() {
@@ -45,7 +46,7 @@ func (suite *StatusServerSuite) SetupTest() {
 }
 
 func (suite *StatusServerSuite) TearDownTest() {
-	suite.Clean(suite.collections...)
+	// suite.Clean(suite.collections...)
 }
 
 func TestStatusServer(t *testing.T) {
@@ -180,5 +181,51 @@ func (suite *StatusServerSuite) TestDeleteStatus() {
 		resp := suite.Expect.DELETE("/api/v1/status/"+suite.statuses[0].ID.Hex()).
 			WithHeader("Authorization", "Bearer "+token).Expect().Status(http.StatusOK).JSON().Object()
 		resp.Value("code").Equal(codes.SuccessCode)
+	})
+}
+
+func (suite *StatusServerSuite) TestLikeStatus() {
+	token := suite.MockLoginUser("1001:123")
+	suite.T().Run("like a status", func(t *testing.T) {
+		resp := suite.Expect.POST(fmt.Sprintf("/api/v1/status/%s/like", suite.statuses[1].ID.Hex())).
+			WithHeader("Authorization", "Bearer "+token).Expect().Status(http.StatusOK).JSON().Object()
+		resp.Value("code").Equal(codes.SuccessCode)
+
+		resp = suite.Expect.POST(fmt.Sprintf("/api/v1/status/%s/like", suite.statuses[1].ID.Hex())).
+			WithHeader("Authorization", "Bearer "+token).Expect().Status(http.StatusOK).JSON().Object()
+		resp.Value("code").Equal(codes.SuccessCode)
+
+		likes := make([]*models.Like, 0)
+		err := db.ODM(context.TODO()).Find(&likes).Error
+		suite.Nil(err)
+		suite.Equal(1, len(likes))
+
+		status := &models.Status{}
+		err = db.ODM(context.TODO()).First(status, bson.M{"_id": suite.statuses[1].ID}).Error
+		suite.Nil(err)
+		suite.Equal(uint64(1), status.LikesCount)
+	})
+}
+
+func (suite *StatusServerSuite) TestUnlikeStatus() {
+	token := suite.MockLoginUser("1001:123")
+	suite.T().Run("unlike a status", func(t *testing.T) {
+		resp := suite.Expect.DELETE(fmt.Sprintf("/api/v1/status/%s/like", suite.statuses[0].ID.Hex())).
+			WithHeader("Authorization", "Bearer "+token).Expect().Status(http.StatusNotFound).JSON().Object()
+		resp.Value("code").Equal(codes.NotFoundCode)
+
+		resp = suite.Expect.POST(fmt.Sprintf("/api/v1/status/%s/like", suite.statuses[0].ID.Hex())).
+			WithHeader("Authorization", "Bearer "+token).Expect().Status(http.StatusOK).JSON().Object()
+		resp.Value("code").Equal(codes.SuccessCode)
+
+		resp = suite.Expect.DELETE(fmt.Sprintf("/api/v1/status/%s/like", suite.statuses[0].ID.Hex())).
+			WithHeader("Authorization", "Bearer "+token).Expect().Status(http.StatusOK).JSON().Object()
+		resp.Value("code").Equal(codes.SuccessCode)
+
+		likes := make([]*models.Like, 0)
+		err := db.ODM(context.TODO()).Find(&likes).Error
+		suite.Nil(err)
+		suite.Equal(1, len(likes))
+		suite.NotNil(likes[0].DeletedAt)
 	})
 }
