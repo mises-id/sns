@@ -70,7 +70,7 @@ func (db *DB) Create(out interface{}) *DB {
 	}
 	if idValue.IsValid() {
 		if idValue.CanSet() {
-			idValue.SetBytes(resultID[:])
+			idValue.Set(reflect.ValueOf(resultID))
 		}
 	}
 	return db

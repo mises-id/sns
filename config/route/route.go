@@ -26,4 +26,9 @@ func SetRoutes(e *echo.Echo) {
 	userGroup.DELETE("/user/follow", v1.Unfollow)
 	userGroup.POST("/status", v1.CreateStatus)
 	userGroup.DELETE("/status/:id", v1.DeleteStatus)
+	userGroup.POST("/status/:id/like", v1.LikeStatus)
+	userGroup.DELETE("/status/:id/like", v1.UnlikeStatus)
+
+	groupV1.GET("/comment", v1.ListComment)
+	userGroup.POST("/comment", v1.CreateComment)
 }
