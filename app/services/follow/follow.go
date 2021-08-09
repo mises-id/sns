@@ -10,7 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func ListFriendship(ctx context.Context, uid uint64, relationType enum.RelationType, pageParams *pagination.TraditionalParams) ([]*models.Follow, pagination.Pagination, error) {
+func ListFriendship(ctx context.Context, uid uint64, relationType enum.RelationType, pageParams *pagination.QuickPagination) ([]*models.Follow, pagination.Pagination, error) {
 	// check user exsit
 	_, err := models.FindUser(ctx, uid)
 	if err != nil {

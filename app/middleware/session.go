@@ -29,6 +29,7 @@ var SetCurrentUserMiddleware = func(next echo.HandlerFunc) echo.HandlerFunc {
 				return err
 			}
 			c.Set("CurrentUser", user)
+			c.Set("CurrentUID", user.UID)
 		}
 
 		return next(c)

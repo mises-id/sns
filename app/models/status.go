@@ -29,6 +29,7 @@ type Status struct {
 	CreatedAt     time.Time          `bson:"created_at,omitempty"`
 	UpdatedAt     time.Time          `bson:"updated_at,omitempty"`
 	User          *User              `bson:"-"`
+	IsLiked       bool               `bson:"-"`
 	ParentStatus  *Status            `bson:"-"`
 	OriginStatus  *Status            `bson:"-"`
 }
@@ -78,16 +79,20 @@ func (s *Status) AfterCreate(ctx context.Context) error {
 	return nil
 }
 
-func (s *Status) IncStatusCounter(ctx context.Context, counterKey string) error {
+func (s *Status) IncStatusCounter(ctx context.Context, counterKey string, values ...int) error {
 	if counterKey == "" {
 		return nil
+	}
+	value := 1
+	if len(values) > 0 {
+		value = values[0]
 	}
 	return db.DB().Collection("statuses").FindOneAndUpdate(ctx, bson.M{"_id": s.ID},
 		bson.D{{
 			Key: "$inc",
 			Value: bson.D{{
 				Key:   counterKey,
-				Value: 1,
+				Value: value,
 			}}},
 		}).Err()
 }
@@ -98,7 +103,17 @@ func (s *Status) GetMetaData() (meta.MetaData, error) {
 
 func FindStatus(ctx context.Context, id primitive.ObjectID) (*Status, error) {
 	status := &Status{}
-	return status, db.ODM(ctx).First(status, bson.M{"_id": id}).Error
+	err := db.ODM(ctx).First(status, bson.M{"_id": id}).Error
+	if err != nil {
+		return nil, err
+	}
+	if err = preloadRelatedStatus(ctx, status); err != nil {
+		return nil, err
+	}
+	if err = preloadAttachment(ctx, status); err != nil {
+		return nil, err
+	}
+	return status, preloadStatusUser(ctx, status)
 }
 
 type CreateStatusParams struct {
@@ -205,6 +220,9 @@ func preloadStatusUser(ctx context.Context, statuses ...*Status) error {
 	users := make([]*User, 0)
 	err := db.ODM(ctx).Where(bson.M{"_id": bson.M{"$in": userIds}}).Find(&users).Error
 	if err != nil {
+		return err
+	}
+	if err = PreloadUserAvatar(ctx, users...); err != nil {
 		return err
 	}
 	userMap := make(map[uint64]*User)
