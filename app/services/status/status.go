@@ -46,7 +46,11 @@ func ListStatus(ctx context.Context, params *ListStatusParams) ([]*models.Status
 		}
 		fromType = &enum.FromTypeFilter{FromType: tp}
 	}
-	statues, page, err := models.ListStatus(ctx, []uint64{params.UID}, params.ParentID, fromType, params.PageQuickParams)
+	uids := make([]uint64, 0)
+	if params.UID != 0 {
+		uids = append(uids, params.UID)
+	}
+	statues, page, err := models.ListStatus(ctx, uids, params.ParentID, fromType, params.PageQuickParams)
 	if err != nil {
 		return nil, nil, err
 	}

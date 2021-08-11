@@ -12,26 +12,27 @@ import (
 )
 
 type CreateCommentParams struct {
-	CommentableID   primitive.ObjectID `json:"commentable_id"`
-	CommentableType string             `json:"commentable_type"`
-	Content         string             `json:"content"`
+	CommentableID primitive.ObjectID `json:"status_id"`
+	Content       string             `json:"content"`
 }
 
 type ListCommentParams struct {
 	pagination.PageQuickParams
-	CommentableID   primitive.ObjectID `query:"commentable_id"`
-	CommentableType string             `query:"commentable_type"`
+	CommentableID string `query:"status_id"`
 }
 
 func ListComment(c echo.Context) error {
 	params := &ListCommentParams{}
 	if err := c.Bind(params); err != nil {
-		return codes.ErrInvalidArgument.New("invalid query params")
+		return codes.ErrInvalidArgument.Newf("invalid query params")
 	}
-
+	statusID, err := primitive.ObjectIDFromHex(params.CommentableID)
+	if err != nil {
+		return codes.ErrNotFound
+	}
 	statuses, page, err := svc.ListStatus(c.Request().Context(), &svc.ListStatusParams{
 		PageQuickParams: &params.PageQuickParams,
-		ParentID:        params.CommentableID,
+		ParentID:        statusID,
 		FromType:        enum.FromComment.String(),
 	})
 	if err != nil {
@@ -51,7 +52,7 @@ func CreateComment(c echo.Context) error {
 		StatusType: enum.TextStatus.String(),
 		Content:    params.Content,
 		ParentID:   params.CommentableID,
-		FromType:   enum.FromLike,
+		FromType:   enum.FromComment,
 	})
 	if err != nil {
 		return err
