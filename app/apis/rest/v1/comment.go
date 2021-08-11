@@ -12,15 +12,13 @@ import (
 )
 
 type CreateCommentParams struct {
-	CommentableID   primitive.ObjectID `json:"commentable_id"`
-	CommentableType string             `json:"commentable_type"`
-	Content         string             `json:"content"`
+	CommentableID primitive.ObjectID `json:"status_id"`
+	Content       string             `json:"content"`
 }
 
 type ListCommentParams struct {
 	pagination.PageQuickParams
-	CommentableID   primitive.ObjectID `query:"commentable_id"`
-	CommentableType string             `query:"commentable_type"`
+	CommentableID primitive.ObjectID `query:"status_id"`
 }
 
 func ListComment(c echo.Context) error {
@@ -51,7 +49,7 @@ func CreateComment(c echo.Context) error {
 		StatusType: enum.TextStatus.String(),
 		Content:    params.Content,
 		ParentID:   params.CommentableID,
-		FromType:   enum.FromLike,
+		FromType:   enum.FromComment,
 	})
 	if err != nil {
 		return err
