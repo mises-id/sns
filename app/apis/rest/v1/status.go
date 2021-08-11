@@ -20,14 +20,21 @@ type ListUserStatusParams struct {
 	pagination.PageQuickParams
 }
 
+type LinkMeta struct {
+	Title        string `json:"title"`
+	Host         string `json:"host"`
+	Link         string `json:"link"`
+	AttachmentID uint64 `json:"attachment_id"`
+}
+
 type CreateStatusParams struct {
 	StatusType string             `json:"status_type"`
 	ParentID   primitive.ObjectID `json:"parent_status_id"`
 	Content    string             `json:"content"`
-	Meta       json.RawMessage    `json:"meta"`
+	LinkMeta   *LinkMeta          `json:"link_meta"`
 }
 
-type LinkMeta struct {
+type LinkMetaResp struct {
 	Title         string `json:"title"`
 	Host          string `json:"host"`
 	Link          string `json:"link"`
@@ -136,11 +143,18 @@ func CreateStatus(c echo.Context) error {
 	if !params.ParentID.IsZero() {
 		fromType = enum.FromForward
 	}
+	meta := json.RawMessage{}
+	var err error
+	if params.LinkMeta != nil {
+		if meta, err = json.Marshal(params.LinkMeta); err != nil {
+			return err
+		}
+	}
 	status, err := svc.CreateStatus(c.Request().Context(), uid, &svc.CreateStatusParams{
 		StatusType: params.StatusType,
 		Content:    params.Content,
 		ParentID:   params.ParentID,
-		Meta:       params.Meta,
+		Meta:       meta,
 		FromType:   fromType,
 	})
 	if err != nil {
@@ -217,11 +231,11 @@ func buildStatusResp(status *models.Status) *StatusResp {
 	return resp
 }
 
-func buildLinkMeta(meta *meta.LinkMeta) *LinkMeta {
+func buildLinkMeta(meta *meta.LinkMeta) *LinkMetaResp {
 	if meta == nil {
 		return nil
 	}
-	return &LinkMeta{
+	return &LinkMetaResp{
 		Title:         meta.Title,
 		Host:          meta.Host,
 		Link:          meta.Link,
