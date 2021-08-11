@@ -50,6 +50,7 @@ func FindLike(ctx context.Context, uid uint64, targetID primitive.ObjectID, targ
 func GetStatusLikeMap(ctx context.Context, uid uint64, statusIDs []primitive.ObjectID) (map[primitive.ObjectID]*Like, error) {
 	likes := make([]*Like, 0)
 	err := db.ODM(ctx).Where(bson.M{
+		"uid":         uid,
 		"target_id":   bson.M{"$in": statusIDs},
 		"target_type": enum.LikeStatus,
 		"deleted_at":  nil,

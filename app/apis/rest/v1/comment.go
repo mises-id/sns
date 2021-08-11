@@ -51,7 +51,7 @@ func CreateComment(c echo.Context) error {
 		StatusType: enum.TextStatus.String(),
 		Content:    params.Content,
 		ParentID:   params.CommentableID,
-		FromType:   enum.FromLike,
+		FromType:   enum.FromComment,
 	})
 	if err != nil {
 		return err
