@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
 )
@@ -16,8 +17,10 @@ func (s *FileStore) Upload(ctx context.Context, filePath, filename string, file 
 			return err
 		}
 	}
+	fmt.Println(filePath + filename)
 	dst, err := os.Create(filePath + filename)
 	if err != nil {
+		fmt.Println(filePath+filename, err)
 		return err
 	}
 	defer dst.Close()
