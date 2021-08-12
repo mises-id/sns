@@ -30,7 +30,8 @@ type ListStatusParams struct {
 }
 
 func GetStatus(ctx context.Context, currentUID uint64, id primitive.ObjectID) (*models.Status, error) {
-	status, err := models.FindStatus(ctx, id)
+	ctxWithUID := context.WithValue(ctx, "CurrentUID", currentUID)
+	status, err := models.FindStatus(ctxWithUID, id)
 	if err != nil {
 		return nil, err
 	}
@@ -38,6 +39,7 @@ func GetStatus(ctx context.Context, currentUID uint64, id primitive.ObjectID) (*
 }
 
 func ListStatus(ctx context.Context, params *ListStatusParams) ([]*models.Status, pagination.Pagination, error) {
+	ctxWithUID := context.WithValue(ctx, "CurrentUID", params.CurrentUID)
 	var fromType *enum.FromTypeFilter
 	if params.FromType != "" {
 		tp, err := enum.FromTypeFromString(params.FromType)
@@ -50,7 +52,7 @@ func ListStatus(ctx context.Context, params *ListStatusParams) ([]*models.Status
 	if params.UID != 0 {
 		uids = append(uids, params.UID)
 	}
-	statues, page, err := models.ListStatus(ctx, uids, params.ParentID, fromType, params.PageQuickParams)
+	statues, page, err := models.ListStatus(ctxWithUID, uids, params.ParentID, fromType, params.PageQuickParams)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -58,6 +60,7 @@ func ListStatus(ctx context.Context, params *ListStatusParams) ([]*models.Status
 }
 
 func UserTimeline(ctx context.Context, uid uint64, pageParams *pagination.PageQuickParams) ([]*models.Status, pagination.Pagination, error) {
+	ctxWithUID := context.WithValue(ctx, "CurrentUID", uid)
 	friendIDs, err := models.ListFollowingUserIDs(ctx, uid)
 	if err != nil {
 		return nil, nil, err
@@ -68,7 +71,7 @@ func UserTimeline(ctx context.Context, uid uint64, pageParams *pagination.PageQu
 		}, nil
 	}
 
-	statues, page, err := models.ListStatus(ctx, friendIDs, primitive.NilObjectID, nil, pageParams)
+	statues, page, err := models.ListStatus(ctxWithUID, friendIDs, primitive.NilObjectID, nil, pageParams)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -76,7 +79,8 @@ func UserTimeline(ctx context.Context, uid uint64, pageParams *pagination.PageQu
 }
 
 func RecommendStatus(ctx context.Context, uid uint64, pageParams *pagination.PageQuickParams) ([]*models.Status, pagination.Pagination, error) {
-	statues, page, err := models.ListStatus(ctx, nil, primitive.NilObjectID, nil, pageParams)
+	ctxWithUID := context.WithValue(ctx, "CurrentUID", uid)
+	statues, page, err := models.ListStatus(ctxWithUID, nil, primitive.NilObjectID, nil, pageParams)
 	if err != nil {
 		return nil, nil, err
 	}

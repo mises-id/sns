@@ -24,6 +24,7 @@ type User struct {
 	CreatedAt      time.Time   `bson:"created_at,omitempty"`
 	UpdatedAt      time.Time   `bson:"updated_at,omitempty"`
 	Avatar         *Attachment `bson:"-"`
+	IsFollowed     bool        `bson:"-"`
 }
 
 func (u *User) BeforeCreate(ctx context.Context) error {

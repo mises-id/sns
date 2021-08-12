@@ -36,10 +36,6 @@ type Status struct {
 	metaData      meta.MetaData      `bson:"-"`
 }
 
-func (*Status) CollectionName() string {
-	return "statuses"
-}
-
 func (s *Status) BeforeCreate(ctx context.Context) error {
 	s.CreatedAt = time.Now()
 	s.UpdatedAt = time.Now()
@@ -230,6 +226,9 @@ func preloadStatusUser(ctx context.Context, statuses ...*Status) error {
 		return err
 	}
 	if err = PreloadUserAvatar(ctx, users...); err != nil {
+		return err
+	}
+	if err = BatchSetFolloweState(ctx, users...); err != nil {
 		return err
 	}
 	userMap := make(map[uint64]*User)

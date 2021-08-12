@@ -30,9 +30,14 @@ func ListComment(c echo.Context) error {
 	if err != nil {
 		return codes.ErrNotFound
 	}
+	var currentUID uint64
+	if c.Get("CurrentUID") != nil {
+		currentUID = c.Get("CurrentUID").(uint64)
+	}
 	statuses, page, err := svc.ListStatus(c.Request().Context(), &svc.ListStatusParams{
 		PageQuickParams: &params.PageQuickParams,
 		ParentID:        statusID,
+		CurrentUID:      currentUID,
 		FromType:        enum.FromComment.String(),
 	})
 	if err != nil {

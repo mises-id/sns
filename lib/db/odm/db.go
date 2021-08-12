@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/jinzhu/inflection"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -181,8 +182,7 @@ func (db *DB) reflectCollectionName(outs ...interface{}) string {
 	if ok {
 		db.collectionName = item.CollectionName()
 	} else {
-		// TODO convert city -> cities, bus -> buses, box-boxes, brush-brushes
-		db.collectionName = strings.ToLower(t.Name()) + "s"
+		db.collectionName = strings.ToLower(inflection.Plural(t.Name()))
 	}
 	return db.collectionName
 }
