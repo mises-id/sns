@@ -232,6 +232,9 @@ func preloadStatusUser(ctx context.Context, statuses ...*Status) error {
 	if err = PreloadUserAvatar(ctx, users...); err != nil {
 		return err
 	}
+	if err = BatchSetFolloweState(ctx, users...); err != nil {
+		return err
+	}
 	userMap := make(map[uint64]*User)
 	for _, user := range users {
 		userMap[user.UID] = user
