@@ -131,3 +131,43 @@ func preloadFollowUser(ctx context.Context, follows []*Follow) error {
 	}
 	return nil
 }
+
+func BatchSetFolloweState(ctx context.Context, users ...*User) error {
+	currentUID := ctx.Value("CurrentUID")
+	if currentUID == nil {
+		return nil
+	}
+	uid := currentUID.(uint64)
+	if uid == 0 {
+		return nil
+	}
+	toUIDs := make([]uint64, len(users))
+	for i, user := range users {
+		toUIDs[i] = user.UID
+	}
+	followMap, err := GetFollowMap(ctx, uid, toUIDs)
+	if err != nil {
+		return err
+	}
+	for _, user := range users {
+		user.IsFollowed = followMap[user.UID] != nil
+	}
+	return nil
+}
+
+func GetFollowMap(ctx context.Context, fromUID uint64, toUserIDs []uint64) (map[uint64]*Follow, error) {
+	follows := make([]*Follow, 0)
+	err := db.ODM(ctx).Where(bson.M{
+		"from_uid":   fromUID,
+		"to_uid":     bson.M{"$in": toUserIDs},
+		"deleted_at": nil,
+	}).Find(&follows).Error
+	if err != nil {
+		return nil, err
+	}
+	followMap := make(map[uint64]*Follow)
+	for _, follow := range follows {
+		followMap[follow.ToUID] = follow
+	}
+	return followMap, nil
+}
