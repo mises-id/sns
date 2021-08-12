@@ -38,7 +38,10 @@ func ListComment(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	resp := batchBuildStatusResp(statuses)
+	resp, err := batchBuildStatusResp(statuses)
+	if err != nil {
+		return err
+	}
 	return rest.BuildSuccessRespWithPagination(c, resp, page.BuildJSONResult())
 }
 
@@ -57,5 +60,9 @@ func CreateComment(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	return rest.BuildSuccessResp(c, buildStatusResp(status))
+	resp, err := buildStatusResp(status)
+	if err != nil {
+		return err
+	}
+	return rest.BuildSuccessResp(c, resp)
 }

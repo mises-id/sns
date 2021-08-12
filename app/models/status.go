@@ -9,6 +9,7 @@ import (
 	"github.com/mises-id/sns/app/models/meta"
 	"github.com/mises-id/sns/lib/db"
 	"github.com/mises-id/sns/lib/pagination"
+	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -32,6 +33,7 @@ type Status struct {
 	IsLiked       bool               `bson:"-"`
 	ParentStatus  *Status            `bson:"-"`
 	OriginStatus  *Status            `bson:"-"`
+	metaData      meta.MetaData      `bson:"-"`
 }
 
 func (*Status) CollectionName() string {
@@ -98,7 +100,12 @@ func (s *Status) IncStatusCounter(ctx context.Context, counterKey string, values
 }
 
 func (s *Status) GetMetaData() (meta.MetaData, error) {
-	return meta.BuildStatusMeta(s.StatusType, s.Meta)
+	var err error
+	if s.metaData == nil {
+		logrus.Info("build meta: ", s.ID.Hex())
+		s.metaData, err = meta.BuildStatusMeta(s.StatusType, s.Meta)
+	}
+	return s.metaData, err
 }
 
 func FindStatus(ctx context.Context, id primitive.ObjectID) (*Status, error) {
@@ -279,13 +286,13 @@ func preloadAttachment(ctx context.Context, statuses ...*Status) error {
 		attachmentIDs = append(attachmentIDs, linkMeta.AttachmentID)
 		linkMetas = append(linkMetas, linkMeta)
 	}
-	attachments := make([]*Status, 0)
+	attachments := make([]*Attachment, 0)
 	err := db.ODM(ctx).Where(bson.M{"_id": bson.M{"$in": attachmentIDs}}).Find(&attachments).Error
 	if err != nil {
 		return err
 	}
 	attachmentMap := make(map[uint64]*Attachment)
-	for _, attachment := range attachmentMap {
+	for _, attachment := range attachments {
 		attachmentMap[attachment.ID] = attachment
 	}
 	for _, linkMeta := range linkMetas {

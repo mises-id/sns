@@ -43,19 +43,19 @@ type LinkMetaResp struct {
 }
 
 type StatusResp struct {
-	ID            string      `json:"id"`
-	User          *UserResp   `json:"user"`
-	Content       string      `json:"content"`
-	FromType      string      `json:"from_type"`
-	StatusType    string      `json:"status_type"`
-	ParentStatus  *StatusResp `json:"parent_status"`
-	OriginStatus  *StatusResp `json:"origin_status"`
-	CommentsCount uint64      `json:"comments_count"`
-	LikesCount    uint64      `json:"likes_count"`
-	ForwardsCount uint64      `json:"forwards_count"`
-	IsLiked       bool        `json:"is_liked"`
-	LinkMeta      *LinkMeta   `json:"link_meta"`
-	CreatedAt     time.Time   `json:"created_at"`
+	ID            string        `json:"id"`
+	User          *UserResp     `json:"user"`
+	Content       string        `json:"content"`
+	FromType      string        `json:"from_type"`
+	StatusType    string        `json:"status_type"`
+	ParentStatus  *StatusResp   `json:"parent_status"`
+	OriginStatus  *StatusResp   `json:"origin_status"`
+	CommentsCount uint64        `json:"comments_count"`
+	LikesCount    uint64        `json:"likes_count"`
+	ForwardsCount uint64        `json:"forwards_count"`
+	IsLiked       bool          `json:"is_liked"`
+	LinkMeta      *LinkMetaResp `json:"link_meta"`
+	CreatedAt     time.Time     `json:"created_at"`
 }
 
 func GetStatus(c echo.Context) error {
@@ -71,7 +71,11 @@ func GetStatus(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	return rest.BuildSuccessResp(c, buildStatusResp(status))
+	resp, err := buildStatusResp(status)
+	if err != nil {
+		return err
+	}
+	return rest.BuildSuccessResp(c, resp)
 }
 
 // list user status
@@ -97,7 +101,10 @@ func ListUserStatus(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	resp := batchBuildStatusResp(statuses)
+	resp, err := batchBuildStatusResp(statuses)
+	if err != nil {
+		return err
+	}
 	return rest.BuildSuccessRespWithPagination(c, resp, page.BuildJSONResult())
 }
 
@@ -111,7 +118,10 @@ func Timeline(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	resp := batchBuildStatusResp(statuses)
+	resp, err := batchBuildStatusResp(statuses)
+	if err != nil {
+		return err
+	}
 	return rest.BuildSuccessRespWithPagination(c, resp, page.BuildJSONResult())
 }
 
@@ -129,7 +139,10 @@ func RecommendStatus(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	resp := batchBuildStatusResp(statuses)
+	resp, err := batchBuildStatusResp(statuses)
+	if err != nil {
+		return err
+	}
 	return rest.BuildSuccessRespWithPagination(c, resp, page.BuildJSONResult())
 }
 
@@ -160,7 +173,11 @@ func CreateStatus(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	return rest.BuildSuccessResp(c, buildStatusResp(status))
+	resp, err := buildStatusResp(status)
+	if err != nil {
+		return err
+	}
+	return rest.BuildSuccessResp(c, resp)
 }
 
 func DeleteStatus(c echo.Context) error {
@@ -202,17 +219,29 @@ func UnlikeStatus(c echo.Context) error {
 	return rest.BuildSuccessResp(c, nil)
 }
 
-func batchBuildStatusResp(statuses []*models.Status) []*StatusResp {
+func batchBuildStatusResp(statuses []*models.Status) ([]*StatusResp, error) {
 	result := make([]*StatusResp, len(statuses))
+	var err error
 	for i, status := range statuses {
-		result[i] = buildStatusResp(status)
+		result[i], err = buildStatusResp(status)
+		if err != nil {
+			return nil, err
+		}
 	}
-	return result
+	return result, nil
 }
 
-func buildStatusResp(status *models.Status) *StatusResp {
+func buildStatusResp(status *models.Status) (*StatusResp, error) {
 	if status == nil {
-		return nil
+		return nil, nil
+	}
+	parentResp, err := buildStatusResp(status.ParentStatus)
+	if err != nil {
+		return nil, err
+	}
+	originResp, err := buildStatusResp(status.OriginStatus)
+	if err != nil {
+		return nil, err
 	}
 	resp := &StatusResp{
 		ID:            status.ID.Hex(),
@@ -220,15 +249,24 @@ func buildStatusResp(status *models.Status) *StatusResp {
 		Content:       status.Content,
 		FromType:      status.FromType.String(),
 		StatusType:    status.StatusType.String(),
-		ParentStatus:  buildStatusResp(status.ParentStatus),
-		OriginStatus:  buildStatusResp(status.OriginStatus),
+		ParentStatus:  parentResp,
+		OriginStatus:  originResp,
 		CommentsCount: status.CommentsCount,
 		LikesCount:    status.LikesCount,
 		ForwardsCount: status.ForwardsCount,
 		IsLiked:       status.IsLiked,
 		CreatedAt:     status.CreatedAt,
 	}
-	return resp
+	metaData, err := status.GetMetaData()
+	if err != nil {
+		return nil, err
+	}
+	switch status.StatusType {
+	case enum.LinkStatus:
+		linkMeta := metaData.(*meta.LinkMeta)
+		resp.LinkMeta = buildLinkMeta(linkMeta)
+	}
+	return resp, nil
 }
 
 func buildLinkMeta(meta *meta.LinkMeta) *LinkMetaResp {
