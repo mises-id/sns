@@ -38,7 +38,7 @@ func ListComment(c echo.Context) error {
 		PageQuickParams: &params.PageQuickParams,
 		ParentID:        statusID,
 		CurrentUID:      currentUID,
-		FromType:        enum.FromComment.String(),
+		FromTypes:       []enum.FromType{enum.FromComment},
 	})
 	if err != nil {
 		return err

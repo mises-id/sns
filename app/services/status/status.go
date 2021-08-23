@@ -26,7 +26,7 @@ type ListStatusParams struct {
 	CurrentUID uint64
 	UID        uint64
 	ParentID   primitive.ObjectID
-	FromType   string
+	FromTypes  []enum.FromType
 }
 
 func GetStatus(ctx context.Context, currentUID uint64, id primitive.ObjectID) (*models.Status, error) {
@@ -49,13 +49,7 @@ func ListStatus(ctx context.Context, params *ListStatusParams) ([]*models.Status
 		UIDs:           uids,
 		ParentStatusID: params.ParentID,
 		PageParams:     params.PageQuickParams,
-	}
-	if params.FromType != "" {
-		tp, err := enum.FromTypeFromString(params.FromType)
-		if err != nil {
-			return nil, nil, err
-		}
-		listParams.FromTypes = []enum.FromType{tp}
+		FromTypes:      params.FromTypes,
 	}
 	statues, page, err := models.ListStatus(ctxWithUID, listParams)
 	if err != nil {

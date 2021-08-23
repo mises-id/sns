@@ -97,6 +97,7 @@ func ListUserStatus(c echo.Context) error {
 		PageQuickParams: &params.PageQuickParams,
 		CurrentUID:      currentUID,
 		UID:             uid,
+		FromTypes:       []enum.FromType{enum.FromPost, enum.FromForward},
 	})
 	if err != nil {
 		return err
