@@ -7,6 +7,7 @@ import (
 
 	"github.com/mises-id/sns/app/models/enum"
 	"github.com/mises-id/sns/app/models/meta"
+	"github.com/mises-id/sns/lib/codes"
 	"github.com/mises-id/sns/lib/db"
 	"github.com/mises-id/sns/lib/pagination"
 	"github.com/sirupsen/logrus"
@@ -22,7 +23,7 @@ type Status struct {
 	FromType      enum.FromType      `bson:"from_type"`
 	StatusType    enum.StatusType    `bson:"status_type"`
 	Meta          json.RawMessage    `bson:"meta,omitempty"`
-	Content       string             `bson:"content,omitempty"`
+	Content       string             `bson:"content,omitempty" validate:"min=0,max=4000"`
 	CommentsCount uint64             `bson:"comments_count,omitempty"`
 	LikesCount    uint64             `bson:"likes_count,omitempty"`
 	ForwardsCount uint64             `bson:"forwards_count,omitempty"`
@@ -34,6 +35,14 @@ type Status struct {
 	ParentStatus  *Status            `bson:"-"`
 	OriginStatus  *Status            `bson:"-"`
 	metaData      meta.MetaData      `bson:"-"`
+}
+
+func (s *Status) validate(ctx context.Context) error {
+	err := Validate.Struct(s)
+	if err != nil {
+		return codes.ErrUnprocessableEntity
+	}
+	return nil
 }
 
 func (s *Status) BeforeCreate(ctx context.Context) error {
@@ -56,7 +65,7 @@ func (s *Status) BeforeCreate(ctx context.Context) error {
 			return err
 		}
 	}
-	return nil
+	return s.validate(ctx)
 }
 
 func (s *Status) AfterCreate(ctx context.Context) error {
