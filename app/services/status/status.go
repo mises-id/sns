@@ -40,19 +40,24 @@ func GetStatus(ctx context.Context, currentUID uint64, id primitive.ObjectID) (*
 
 func ListStatus(ctx context.Context, params *ListStatusParams) ([]*models.Status, pagination.Pagination, error) {
 	ctxWithUID := context.WithValue(ctx, "CurrentUID", params.CurrentUID)
-	var fromType *enum.FromTypeFilter
+
+	uids := make([]uint64, 0)
+	if params.UID != 0 {
+		uids = append(uids, params.UID)
+	}
+	listParams := &models.ListStatusParams{
+		UIDs:           uids,
+		ParentStatusID: params.ParentID,
+		PageParams:     params.PageQuickParams,
+	}
 	if params.FromType != "" {
 		tp, err := enum.FromTypeFromString(params.FromType)
 		if err != nil {
 			return nil, nil, err
 		}
-		fromType = &enum.FromTypeFilter{FromType: tp}
+		listParams.FromTypes = []enum.FromType{tp}
 	}
-	uids := make([]uint64, 0)
-	if params.UID != 0 {
-		uids = append(uids, params.UID)
-	}
-	statues, page, err := models.ListStatus(ctxWithUID, uids, params.ParentID, fromType, params.PageQuickParams)
+	statues, page, err := models.ListStatus(ctxWithUID, listParams)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -71,7 +76,11 @@ func UserTimeline(ctx context.Context, uid uint64, pageParams *pagination.PageQu
 		}, nil
 	}
 
-	statues, page, err := models.ListStatus(ctxWithUID, friendIDs, primitive.NilObjectID, nil, pageParams)
+	statues, page, err := models.ListStatus(ctxWithUID, &models.ListStatusParams{
+		UIDs:           friendIDs,
+		ParentStatusID: primitive.NilObjectID,
+		PageParams:     pageParams,
+	})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -80,7 +89,12 @@ func UserTimeline(ctx context.Context, uid uint64, pageParams *pagination.PageQu
 
 func RecommendStatus(ctx context.Context, uid uint64, pageParams *pagination.PageQuickParams) ([]*models.Status, pagination.Pagination, error) {
 	ctxWithUID := context.WithValue(ctx, "CurrentUID", uid)
-	statues, page, err := models.ListStatus(ctxWithUID, nil, primitive.NilObjectID, nil, pageParams)
+	statues, page, err := models.ListStatus(ctxWithUID, &models.ListStatusParams{
+		UIDs:           nil,
+		ParentStatusID: primitive.NilObjectID,
+		FromTypes:      []enum.FromType{enum.FromPost, enum.FromForward},
+		PageParams:     pageParams,
+	})
 	if err != nil {
 		return nil, nil, err
 	}
