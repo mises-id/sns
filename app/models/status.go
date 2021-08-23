@@ -166,22 +166,29 @@ func DeleteStatus(ctx context.Context, id primitive.ObjectID) error {
 	return err
 }
 
-func ListStatus(ctx context.Context, uids []uint64, parentStatusID primitive.ObjectID, fromTypeFilter *enum.FromTypeFilter, pageParams *pagination.PageQuickParams) ([]*Status, pagination.Pagination, error) {
-	if pageParams == nil {
-		pageParams = pagination.DefaultQuickParams()
+type ListStatusParams struct {
+	UIDs           []uint64
+	ParentStatusID primitive.ObjectID
+	FromTypes      []enum.FromType
+	PageParams     *pagination.PageQuickParams
+}
+
+func ListStatus(ctx context.Context, params *ListStatusParams) ([]*Status, pagination.Pagination, error) {
+	if params.PageParams == nil {
+		params.PageParams = pagination.DefaultQuickParams()
 	}
 	statuses := make([]*Status, 0)
 	chain := db.ODM(ctx)
-	if uids != nil && len(uids) > 0 {
-		chain = chain.Where(bson.M{"uid": bson.M{"$in": uids}})
+	if params.UIDs != nil && len(params.UIDs) > 0 {
+		chain = chain.Where(bson.M{"uid": bson.M{"$in": params.UIDs}})
 	}
-	if !parentStatusID.IsZero() {
-		chain = chain.Where(bson.M{"parent_id": parentStatusID})
+	if !params.ParentStatusID.IsZero() {
+		chain = chain.Where(bson.M{"parent_id": params.ParentStatusID})
 	}
-	if fromTypeFilter != nil {
-		chain = chain.Where(bson.M{"from_type": fromTypeFilter.FromType})
+	if params.FromTypes != nil {
+		chain = chain.Where(bson.M{"from_type": bson.M{"$in": params.FromTypes}})
 	}
-	paginator := pagination.NewQuickPaginator(pageParams.Limit, pageParams.NextID, chain)
+	paginator := pagination.NewQuickPaginator(params.PageParams.Limit, params.PageParams.NextID, chain)
 	page, err := paginator.Paginate(&statuses)
 	if err != nil {
 		return nil, nil, err

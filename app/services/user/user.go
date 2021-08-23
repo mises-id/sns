@@ -56,7 +56,7 @@ func UpdateUsername(ctx context.Context, uid uint64, username string) (*models.U
 		return nil, err
 	}
 	if user.Username != "" {
-		return nil, codes.ErrUsernameExsisted
+		return nil, codes.ErrUsernameExisted
 	}
 	user.Username = username
 	if err = models.UpdateUsername(ctx, user); err != nil {
