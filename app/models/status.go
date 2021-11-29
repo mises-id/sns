@@ -38,6 +38,7 @@ type Status struct {
 }
 
 func (s *Status) validate(ctx context.Context) error {
+	logrus.Info("xxxxx")
 	err := Validate.Struct(s)
 	if err != nil {
 		return codes.ErrUnprocessableEntity
@@ -101,7 +102,6 @@ func (s *Status) IncStatusCounter(ctx context.Context, counterKey string, values
 func (s *Status) GetMetaData() (meta.MetaData, error) {
 	var err error
 	if s.metaData == nil {
-		logrus.Info("build meta: ", s.ID.Hex())
 		s.metaData, err = meta.BuildStatusMeta(s.StatusType, s.Meta)
 	}
 	return s.metaData, err

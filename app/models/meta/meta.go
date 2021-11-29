@@ -13,7 +13,7 @@ type MetaData interface {
 
 func BuildStatusMeta(statusType enum.StatusType, metaData json.RawMessage) (MetaData, error) {
 	if metaData == nil {
-		return nil, nil
+		return &TextMeta{}, nil
 	}
 	var data MetaData
 	switch statusType {

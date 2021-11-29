@@ -130,6 +130,7 @@ func (suite *UserServerSuite) TestUpdateUser() {
 		Gender:   enum.GenderFemale,
 		AvatarID: 0,
 		Misesid:  "123",
+		Email:    "foo@t.com",
 	})
 	token := suite.MockLoginUser("123:123")
 	suite.T().Run("update username success", func(t *testing.T) {
@@ -150,8 +151,8 @@ func (suite *UserServerSuite) TestUpdateUser() {
 			"username": map[string]interface{}{
 				"username": "Hello",
 			},
-		}).WithHeader("Authorization", "Bearer "+token).Expect().Status(http.StatusForbidden).JSON().Object()
-		resp.Value("code").Equal(codes.UsernameExsistedCode)
+		}).WithHeader("Authorization", "Bearer "+token).Expect().Status(http.StatusUnprocessableEntity).JSON().Object()
+		resp.Value("code").Equal(codes.UsernameExistedCode)
 	})
 	suite.T().Run("update user avatar success", func(t *testing.T) {
 		resp := suite.Expect.PATCH("/api/v1/user/me").WithJSON(map[string]interface{}{

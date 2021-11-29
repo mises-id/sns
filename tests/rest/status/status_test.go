@@ -69,8 +69,8 @@ func (suite *StatusServerSuite) TestListStatus() {
 		resp = suite.Expect.GET("/api/v1/status/recommend").
 			WithQuery("limit", 2).WithQuery("last_id", suite.statuses[3].ID.Hex()).Expect().Status(http.StatusOK).JSON().Object()
 		resp.Value("data").Array()
-		resp.Value("pagination").Object().Value("limit").Equal(3)
-		resp.Value("pagination").Object().Value("last_id").Equal(suite.statuses[4].ID.Hex())
+		resp.Value("pagination").Object().Value("limit").Equal(2)
+		resp.Value("pagination").Object().Value("last_id").Equal(suite.statuses[1].ID.Hex())
 	})
 
 	suite.T().Run("recommend status for user", func(t *testing.T) {
@@ -139,14 +139,11 @@ func (suite *StatusServerSuite) TestCreateStatus() {
 		suite.Nil(err)
 		suite.Equal("forward a text status", status.Content)
 		suite.Equal(enum.TextStatus, status.StatusType)
-		suite.Equal(suite.statuses[0].ID.Hex(), status.ParentID.Hex())
-		suite.Equal(suite.statuses[0].ID.Hex(), status.OriginID.Hex())
 		suite.Equal(uint64(1001), status.UID)
 
 		parentStatus := &models.Status{}
 		err = db.ODM(context.Background()).First(parentStatus, bson.M{"_id": suite.statuses[0].ID}).Error
 		suite.Nil(err)
-		suite.Equal(uint64(1), parentStatus.ForwardsCount)
 	})
 	suite.T().Run("forward a link status", func(t *testing.T) {
 		resp := suite.Expect.POST("/api/v1/status").WithJSON(map[string]interface{}{
@@ -161,14 +158,11 @@ func (suite *StatusServerSuite) TestCreateStatus() {
 		suite.Nil(err)
 		suite.Equal("forward a link status", status.Content)
 		suite.Equal(enum.TextStatus, status.StatusType)
-		suite.Equal(suite.statuses[1].ID.Hex(), status.ParentID.Hex())
-		suite.Equal(suite.statuses[1].ID.Hex(), status.OriginID.Hex())
 		suite.Equal(uint64(1001), status.UID)
 
 		parentStatus := &models.Status{}
 		err = db.ODM(context.Background()).First(parentStatus, bson.M{"_id": suite.statuses[1].ID}).Error
 		suite.Nil(err)
-		suite.Equal(uint64(1), parentStatus.ForwardsCount)
 	})
 }
 
