@@ -26,14 +26,15 @@ type AvatarResp struct {
 }
 
 type UserResp struct {
-	UID      uint64      `json:"uid"`
-	Username string      `json:"username"`
-	Misesid  string      `json:"misesid"`
-	Gender   string      `json:"gender"`
-	Mobile   string      `json:"mobile"`
-	Email    string      `json:"email"`
-	Address  string      `json:"address"`
-	Avatar   *AvatarResp `json:"avatar"`
+	UID        uint64      `json:"uid"`
+	Username   string      `json:"username"`
+	Misesid    string      `json:"misesid"`
+	Gender     string      `json:"gender"`
+	Mobile     string      `json:"mobile"`
+	Email      string      `json:"email"`
+	Address    string      `json:"address"`
+	Avatar     *AvatarResp `json:"avatar"`
+	IsFollowed bool        `json:"is_followed"`
 }
 
 func SignIn(c echo.Context) error {
@@ -56,7 +57,7 @@ func MyProfile(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	return rest.BuildSuccessResp(c, buildUser(user))
+	return rest.BuildSuccessResp(c, buildUserResp(user))
 }
 
 func FindUser(c echo.Context) error {
@@ -69,7 +70,7 @@ func FindUser(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	return rest.BuildSuccessResp(c, buildUser(user))
+	return rest.BuildSuccessResp(c, buildUserResp(user))
 }
 
 type UserProfileParams struct {
@@ -124,18 +125,22 @@ func UpdateUser(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	return rest.BuildSuccessResp(c, buildUser(user))
+	return rest.BuildSuccessResp(c, buildUserResp(user))
 }
 
-func buildUser(user *models.User) *UserResp {
+func buildUserResp(user *models.User) *UserResp {
+	if user == nil {
+		return nil
+	}
 	resp := &UserResp{
-		UID:      user.UID,
-		Username: user.Username,
-		Misesid:  user.Misesid,
-		Gender:   user.Gender.String(),
-		Mobile:   user.Mobile,
-		Email:    user.Email,
-		Address:  user.Address,
+		UID:        user.UID,
+		Username:   user.Username,
+		Misesid:    user.Misesid,
+		Gender:     user.Gender.String(),
+		Mobile:     user.Mobile,
+		Email:      user.Email,
+		Address:    user.Address,
+		IsFollowed: user.IsFollowed,
 	}
 	if user.Avatar != nil {
 		resp.Avatar = &AvatarResp{

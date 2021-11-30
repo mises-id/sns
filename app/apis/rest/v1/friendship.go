@@ -14,12 +14,12 @@ import (
 )
 
 type ListFriendshipParams struct {
-	pagination.TraditionalParams
+	pagination.QuickPagination
 	RelationType string `query:"relation_type"`
 }
 
 type FollowParams struct {
-	ToUserID uint64 `json:"to_user_id"`
+	ToUserID uint64 `json:"to_user_id" query:"to_user_id"`
 }
 
 type FriendshipResp struct {
@@ -42,7 +42,7 @@ func ListFriendship(c echo.Context) error {
 	if err != nil {
 		relationType = enum.Fan
 	}
-	follows, page, err := followSVC.ListFriendship(c.Request().Context(), uid, relationType, &params.TraditionalParams)
+	follows, page, err := followSVC.ListFriendship(c.Request().Context(), uid, relationType, &params.QuickPagination)
 	if err != nil {
 		return err
 	}
@@ -91,7 +91,7 @@ func batchBuildFriendshipResp(relationType enum.RelationType, friendships []*mod
 		resp[i] = &FriendshipResp{
 			RelationType: currentRelationType.String(),
 			CreatedAt:    friendship.CreatedAt,
-			User:         buildUser(user),
+			User:         buildUserResp(user),
 		}
 	}
 	return resp

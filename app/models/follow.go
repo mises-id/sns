@@ -9,6 +9,7 @@ import (
 	"github.com/mises-id/sns/lib/pagination"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type Follow struct {
@@ -28,7 +29,7 @@ func (a *Follow) BeforeCreate(ctx context.Context) error {
 	return nil
 }
 
-func ListFollow(ctx context.Context, uid uint64, relationType enum.RelationType, pageParams *pagination.TraditionalParams) ([]*Follow, pagination.Pagination, error) {
+func ListFollow(ctx context.Context, uid uint64, relationType enum.RelationType, pageParams *pagination.QuickPagination) ([]*Follow, pagination.Pagination, error) {
 	follows := make([]*Follow, 0)
 	chain := db.ODM(ctx)
 	if relationType == enum.Fan {
@@ -38,7 +39,7 @@ func ListFollow(ctx context.Context, uid uint64, relationType enum.RelationType,
 	} else {
 		chain = chain.Where(bson.M{"from_uid": uid, "is_friend": true})
 	}
-	paginator := pagination.NewTraditionalPaginator(pageParams.PageNum, pageParams.PageSize, chain)
+	paginator := pagination.NewQuickPaginator(pageParams.Limit, pageParams.NextID, chain)
 	page, err := paginator.Paginate(&follows)
 	if err != nil {
 		return nil, nil, err
@@ -87,6 +88,26 @@ func DeleteFollow(ctx context.Context, fromUID, toUID uint64) error {
 	return err
 }
 
+func ListFollowingUserIDs(ctx context.Context, uid uint64) ([]uint64, error) {
+	cursor, err := db.DB().Collection("follows").Find(ctx, &bson.M{
+		"from_uid": uid,
+	}, &options.FindOptions{
+		Projection: bson.M{"to_uid": 1},
+	})
+	if err != nil {
+		return nil, err
+	}
+	follows := make([]*Follow, 0)
+	if err = cursor.All(ctx, &follows); err != nil {
+		return nil, err
+	}
+	ids := make([]uint64, len(follows))
+	for i, follow := range follows {
+		ids[i] = follow.ToUID
+	}
+	return ids, nil
+}
+
 func preloadFollowUser(ctx context.Context, follows []*Follow) error {
 	userIds := make([]uint64, 0)
 	for _, follow := range follows {
@@ -95,6 +116,9 @@ func preloadFollowUser(ctx context.Context, follows []*Follow) error {
 	users := make([]*User, 0)
 	err := db.ODM(ctx).Where(bson.M{"_id": bson.M{"$in": userIds}}).Find(&users).Error
 	if err != nil {
+		return err
+	}
+	if err = PreloadUserAvatar(ctx, users...); err != nil {
 		return err
 	}
 	userMap := make(map[uint64]*User)
@@ -106,4 +130,44 @@ func preloadFollowUser(ctx context.Context, follows []*Follow) error {
 		follow.ToUser = userMap[follow.ToUID]
 	}
 	return nil
+}
+
+func BatchSetFolloweState(ctx context.Context, users ...*User) error {
+	currentUID := ctx.Value("CurrentUID")
+	if currentUID == nil {
+		return nil
+	}
+	uid := currentUID.(uint64)
+	if uid == 0 {
+		return nil
+	}
+	toUIDs := make([]uint64, len(users))
+	for i, user := range users {
+		toUIDs[i] = user.UID
+	}
+	followMap, err := GetFollowMap(ctx, uid, toUIDs)
+	if err != nil {
+		return err
+	}
+	for _, user := range users {
+		user.IsFollowed = followMap[user.UID] != nil
+	}
+	return nil
+}
+
+func GetFollowMap(ctx context.Context, fromUID uint64, toUserIDs []uint64) (map[uint64]*Follow, error) {
+	follows := make([]*Follow, 0)
+	err := db.ODM(ctx).Where(bson.M{
+		"from_uid":   fromUID,
+		"to_uid":     bson.M{"$in": toUserIDs},
+		"deleted_at": nil,
+	}).Find(&follows).Error
+	if err != nil {
+		return nil, err
+	}
+	followMap := make(map[uint64]*Follow)
+	for _, follow := range follows {
+		followMap[follow.ToUID] = follow
+	}
+	return followMap, nil
 }

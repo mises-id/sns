@@ -2,6 +2,7 @@ package mises
 
 import (
 	"log"
+	"strings"
 
 	"github.com/mises-id/sdk"
 	"github.com/mises-id/sdk/types"
@@ -30,11 +31,18 @@ type ClientImpl struct {
 }
 
 func (c *ClientImpl) Auth(auth string) (string, error) {
+	// just for staging environment
+	if env.Envs.DebugMisesPrefix != "" {
+		arr := strings.Split(auth, ":")
+		if len(arr) > 1 {
+			return arr[1], nil
+		}
+	}
 	return c.client.VerifyLogin(auth)
 }
 
 func New() Client {
 	return &ClientImpl{
-		client: sdk.NewSdkForUser(sdk.MSdkOption{}, ""),
+		client: sdk.NewSdkForApp(sdk.MSdkOption{}),
 	}
 }

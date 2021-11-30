@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"os"
+	"path"
 )
 
 type FileStore struct{}
@@ -16,7 +17,7 @@ func (s *FileStore) Upload(ctx context.Context, filePath, filename string, file 
 			return err
 		}
 	}
-	dst, err := os.Create(filePath + filename)
+	dst, err := os.Create(path.Join(filePath, filename))
 	if err != nil {
 		return err
 	}

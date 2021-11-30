@@ -51,4 +51,36 @@ func EnsureIndex() {
 	if err != nil {
 		logrus.Debug(err)
 	}
+
+	_, err = db.DB().Collection("statuses").Indexes().CreateMany(context.Background(), []mongo.IndexModel{
+		{
+			Keys: bson.M{"uid": 1},
+		},
+		{
+			Keys: bson.M{"deleted_at": 1},
+		},
+	}, opts)
+	if err != nil {
+		logrus.Debug(err)
+	}
+
+	_, err = db.DB().Collection("likes").Indexes().CreateMany(context.Background(), []mongo.IndexModel{
+		{
+			Keys: bsonx.Doc{{
+				Key: "uid", Value: bsonx.Int32(1),
+			}, {
+				Key: "target_id", Value: bsonx.Int32(1),
+			}, {
+				Key: "target_type", Value: bsonx.Int32(1),
+			}, {
+				Key: "deleted_at", Value: bsonx.Int32(1)},
+			},
+			Options: &options.IndexOptions{
+				Unique: &trueBool,
+			},
+		},
+	}, opts)
+	if err != nil {
+		logrus.Debug(err)
+	}
 }
